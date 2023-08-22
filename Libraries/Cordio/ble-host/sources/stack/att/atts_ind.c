@@ -404,6 +404,9 @@ void attsHandleValueIndNtf(dmConnId_t connId, uint16_t handle, uint8_t slot, uin
 
   WsfTaskLock();
 
+  WSF_TRACE3("ATT", "INFO", "attsHandleValueIndNtf: connId=%d, handle=%d, valueLen=%d",
+             connId, handle, valueLen);
+
   /* get CCB and verify connection still in use */
   if ((pCcb = attsCcbByConnId(connId, slot)) != NULL)
   {

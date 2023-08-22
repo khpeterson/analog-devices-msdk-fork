@@ -164,6 +164,18 @@ void WsfTaskSetReady(wsfHandlerId_t handlerId, wsfTaskEvent_t event)
   }
 }
 
+void WsfTaskRestartMsgTask()
+{
+    xTaskForceWaitingNotification(wsfOs.task.msgTaskHandle);
+    xTaskNotify(wsfOs.task.msgTaskHandle, WSF_MSG_QUEUE_EVENT, eSetBits);
+}
+
+void WsfTaskRestartHndTask()
+{
+    xTaskForceWaitingNotification(wsfOs.task.hndTaskHandle);
+    xTaskNotify(wsfOs.task.hndTaskHandle, WSF_HANDLER_EVENT, eSetBits);
+}
+
 /*************************************************************************************************/
 /*!
  *  \brief  Return the message queue used by the given handler.
