@@ -4919,6 +4919,9 @@ TickType_t uxTaskResetEventItemValue( void )
 
             /* If the task is in the blocked state specifically to wait for a
              * notification then unblock it now. */
+            if (listLIST_ITEM_CONTAINER( &( pxTCB->xStateListItem ) ) == &xSuspendedTaskList) {
+                configASSERT(ucOriginalNotifyState == taskWAITING_NOTIFICATION);
+            }
             if( ucOriginalNotifyState == taskWAITING_NOTIFICATION )
             {
                 listREMOVE_ITEM( &( pxTCB->xStateListItem ) );
