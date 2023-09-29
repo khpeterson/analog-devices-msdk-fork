@@ -154,6 +154,7 @@ bool_t WsfOsActive(void);
  */
 /*************************************************************************************************/
 void WsfSetEvent(wsfHandlerId_t handlerId, wsfEventMask_t event);
+void WsfTaskRestartHndTask();
 
 /*************************************************************************************************/
 /*!
@@ -178,6 +179,7 @@ void WsfTaskUnlock(void);
  */
 /*************************************************************************************************/
 void WsfTaskSetReady(wsfHandlerId_t handlerId, wsfTaskEvent_t event);
+void WsfTaskRestartMsgTask();
 
 /*************************************************************************************************/
 /*!

@@ -770,7 +770,8 @@ uint32_t MXC_SPI_RevA1_MasterTransHandler(mxc_spi_reva_regs_t *spi, mxc_spi_reva
 
     // Leave slave select asserted at the end of the transaction
     if (states[spi_num].hw_ss_control && !req->ssDeassert) {
-        spi->ctrl0 |= MXC_F_SPI_REVA_CTRL0_SS_CTRL;
+		spi->ctrl0 = (spi->ctrl0 & ~MXC_F_SPI_REVA_CTRL0_START) | MXC_F_SPI_REVA_CTRL0_SS_CTRL;
+
     }
 
     retval = MXC_SPI_RevA1_TransHandler(spi, req);
@@ -782,7 +783,7 @@ uint32_t MXC_SPI_RevA1_MasterTransHandler(mxc_spi_reva_regs_t *spi, mxc_spi_reva
 
     // Deassert slave select at the end of the transaction
     if (states[spi_num].hw_ss_control && req->ssDeassert) {
-        spi->ctrl0 &= ~MXC_F_SPI_REVA_CTRL0_SS_CTRL;
+		spi->ctrl0 &= ~(MXC_F_SPI_REVA_CTRL0_START | MXC_F_SPI_REVA_CTRL0_SS_CTRL);
     }
 
     return retval;
