@@ -4846,6 +4846,27 @@ TickType_t uxTaskResetEventItemValue( void )
 
 #if ( configUSE_TASK_NOTIFICATIONS == 1 )
 
+volatile uint32_t notify_out_of_sync_count;
+volatile uint8_t notify_out_of_sync_original_state;
+volatile uint8_t notify_out_of_sync_is_CordioM;
+
+    BaseType_t xTaskGenericForceWaitingNotification( TaskHandle_t xTaskToNotify,
+                                                     UBaseType_t uxIndexToNotify)
+    {
+        TCB_t * pxTCB = xTaskToNotify;
+        BaseType_t xReturn = pdFAIL;
+
+        taskENTER_CRITICAL();
+        {
+            if (listLIST_ITEM_CONTAINER( &( pxTCB->xStateListItem ) ) == &xSuspendedTaskList) {
+                pxTCB->ucNotifyState[ uxIndexToNotify ] = taskWAITING_NOTIFICATION;
+                xReturn = pdPASS;
+            }
+        }
+        taskEXIT_CRITICAL();
+        return xReturn;
+    }
+
     BaseType_t xTaskGenericNotify( TaskHandle_t xTaskToNotify,
                                    UBaseType_t uxIndexToNotify,
                                    uint32_t ulValue,
@@ -4919,6 +4940,15 @@ TickType_t uxTaskResetEventItemValue( void )
 
             /* If the task is in the blocked state specifically to wait for a
              * notification then unblock it now. */
+            /* tasks on delayed list must be waiting for notification */
+            if (listLIST_ITEM_CONTAINER( &( pxTCB->xStateListItem ) ) == &xSuspendedTaskList) {
+                //configASSERT(ucOriginalNotifyState == taskWAITING_NOTIFICATION);
+                if (ucOriginalNotifyState != taskWAITING_NOTIFICATION) {
+                    notify_out_of_sync_original_state = ucOriginalNotifyState;
+                    notify_out_of_sync_is_CordioM = (strcmp(pxTCB->pcTaskName, "CordioM") == 0);
+                    notify_out_of_sync_count++;
+                }
+            }
             if( ucOriginalNotifyState == taskWAITING_NOTIFICATION )
             {
                 listREMOVE_ITEM( &( pxTCB->xStateListItem ) );
