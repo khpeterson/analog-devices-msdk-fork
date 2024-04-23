@@ -2065,6 +2065,11 @@ configRUN_TIME_COUNTER_TYPE ulTaskGetIdleRunTimePercent( void ) PRIVILEGED_FUNCT
  * \defgroup xTaskNotifyIndexed xTaskNotifyIndexed
  * \ingroup TaskNotifications
  */
+BaseType_t xTaskGenericForceWaitingNotification( TaskHandle_t xTaskToNotify,
+                                                 UBaseType_t uxIndexToNotify) PRIVILEGED_FUNCTION;
+#define xTaskForceWaitingNotification( xTaskToNotify ) \
+    xTaskGenericForceWaitingNotification( ( xTaskToNotify ), ( tskDEFAULT_INDEX_TO_NOTIFY ) )
+
 BaseType_t xTaskGenericNotify( TaskHandle_t xTaskToNotify,
                                UBaseType_t uxIndexToNotify,
                                uint32_t ulValue,
