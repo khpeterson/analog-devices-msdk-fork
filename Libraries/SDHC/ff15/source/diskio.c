@@ -82,6 +82,7 @@ DSTATUS disk_initialize (
 		case DEV_SD:
 
 	    	rtc_en = 0;
+#if 0
 #if (FF_FS_NORTC == 0)
 	    	//Initialize RTC
 	    	if (MXC_RTC->cn & MXC_F_RTC_CN_WE) {
@@ -94,6 +95,7 @@ DSTATUS disk_initialize (
 			    	rtc_en = 1; 
 				}
 	   		 }
+#endif
 #endif
 	    	if (MXC_SDHC_Card_Inserted() && (MXC_SDHC_Lib_InitCard(INIT_CARD_RETRIES) == E_NO_ERROR)) {
 				/* Card initialized and ready for work */
@@ -257,6 +259,7 @@ DRESULT disk_ioctl (
     return status;
 }
 
+#if 0
 DWORD get_fattime(void) {
     if(rtc_en) {
         DWORD result;
@@ -298,6 +301,7 @@ DWORD get_fattime(void) {
         return RES_NOTRDY;    
     }
 }
+#endif
 
 static DRESULT ctrl_sync(void *buff,BYTE pdrv)
 {
