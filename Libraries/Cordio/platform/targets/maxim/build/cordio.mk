@@ -66,7 +66,7 @@ RTOS            ?= baremetal
 # Used for storing pairing/bonding information
 PAL_NVM_SIZE	?= 0x4000
 
-CFG_DEV         := BT_VER=$(BT_VER)
+CFG_DEV         += BT_VER=$(BT_VER)
 CFG_DEV         += SCH_CHECK_LIST_INTEGRITY=1
 ifeq ($(USE_SHARED_WUT),1)
 CFG_DEV         += USE_SHARED_WUT=1
