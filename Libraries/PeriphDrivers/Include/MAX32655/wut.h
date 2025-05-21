@@ -4,35 +4,22 @@
  */
 
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -172,14 +159,29 @@ uint32_t MXC_WUT_GetCount(mxc_wut_regs_t *wut);
  * @brief   Clear the timer interrupt.
  * @param   wut  Pointer to Wakeup Timer instance to clear interrupts for.
  */
-void MXC_WUT_IntClear(mxc_wut_regs_t *wut);
+__attribute__((deprecated("Use MXC_WUT_ClearFlags instead.  See wut.h for more details."))) void
+MXC_WUT_IntClear(mxc_wut_regs_t *wut);
+
+/**
+ * @brief   Clear the timer interrupt.
+ * @param   wut  Pointer to Wakeup Timer instance to clear interrupt flags for.
+ */
+void MXC_WUT_ClearFlags(mxc_wut_regs_t *wut);
 
 /**
  * @brief   Get the timer interrupt status.
  * @param   wut  Pointer to Wakeup Timer instance to get interrupt staus from.
  * @return  Returns the interrupt status. 1 if interrupt has occurred.
  */
-uint32_t MXC_WUT_IntStatus(mxc_wut_regs_t *wut);
+__attribute__((deprecated("Use MXC_WUT_GetFlags instead.  See wut.h for more details."))) uint32_t
+MXC_WUT_IntStatus(mxc_wut_regs_t *wut);
+
+/**
+ * @brief   Get the timer interrupt status.
+ * @param   wut  Pointer to Wakeup Timer instance to get interrupt status from.
+ * @return  Returns the interrupt status. 1 if interrupt has occurred.
+ */
+uint32_t MXC_WUT_GetFlags(mxc_wut_regs_t *wut);
 
 /**
  * @brief   Set the timer compare count.
@@ -223,13 +225,27 @@ int MXC_WUT_GetTime(mxc_wut_regs_t *wut, uint32_t ticks, uint32_t *time, mxc_wut
  * @brief   Wait for an edge of the WUT count register.
  * @param   wut  Pointer to Wakeup Timer instance to wait on.
  */
-void MXC_WUT_Edge(mxc_wut_regs_t *wut);
+__attribute__((deprecated("Use MXC_WUT_WaitForEdge instead.  See wut.h for more details."))) void
+MXC_WUT_Edge(mxc_wut_regs_t *wut);
+
+/**
+ * @brief   Wait for an edge of the WUT count register.
+ * @param   wut  Pointer to Wakeup Timer instance to wait on.
+ */
+void MXC_WUT_WaitForEdge(mxc_wut_regs_t *wut);
 
 /**
  * @brief   Store the count and snapshot values.
  * @param   wut  Pointer to Wakeup Timer instance to store count and snapshot values for.
  */
-void MXC_WUT_Store(mxc_wut_regs_t *wut);
+__attribute__((deprecated("Use MXC_WUT_StoreCount instead.  See wut.h for more details."))) void
+MXC_WUT_Store(mxc_wut_regs_t *wut);
+
+/**
+ * @brief   Store the count and snapshot values.
+ * @param   wut  Pointer to Wakeup Timer instance to store count and snapshot values for.
+ */
+void MXC_WUT_StoreCount(mxc_wut_regs_t *wut);
 
 /**
  * @brief   Restore the DBB clock with the stored count and snapshot values.

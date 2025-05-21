@@ -1,35 +1,20 @@
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All rights Reserved.
  *
- * This software is protected by copyright laws of the United States and
- * of foreign countries. This material may also be protected by patent laws
- * and technology transfer regulations of the United States and of foreign
- * countries. This software is furnished under a license agreement and/or a
- * nondisclosure agreement and may only be used or reproduced in accordance
- * with the terms of those agreements. Dissemination of this information to
- * any party or parties not specified in the license agreement and/or
- * nondisclosure agreement is expressly prohibited.
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -188,9 +173,11 @@ static int hart_uart_init(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clo
         MXC_AFE_GPIO_Config(&gpio_cfg_extclk);
         break;
 
+#if TARGET_NUM != 32675
     case MXC_UART_ERTCO_CLK:
         return E_BAD_PARAM;
         break;
+#endif
 
     case MXC_UART_IBRO_CLK:
         MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_IBRO);
@@ -206,12 +193,12 @@ static int hart_uart_init(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clo
 
     switch (MXC_UART_GET_IDX(uart)) {
     case 0:
-        MXC_AFE_GPIO_Config(&gpio_cfg_uart0);
+        MXC_AFE_GPIO_Config(&gpio_cfg_hart);
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART0);
         break;
 
     case 2:
-        MXC_AFE_GPIO_Config(&gpio_cfg_uart2);
+        MXC_AFE_GPIO_Config(&gpio_cfg_hart);
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART2);
         break;
 
@@ -225,6 +212,14 @@ static int hart_uart_init(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clo
     }
 
     // Set RX threshold to 1 byte
+    // Note, to meet HART TPDLL needs, each received byte must be handled singularly, to verify
+    //  it for (vertical: parity bit) parity, framing errors, and gap error.
+    //  This HART UART driver currently checks parity, and framing errors, but gap must be
+    //  handled by TPDLL or application code.
+    //
+    // To increase threshold would require restructuring of the receiver to monitor gaps
+    //  and to parse when and if comm errors occur, as there could be multiple bytes in
+    //  the FIFO, and the errors would only apply to the most recent.
     retval = MXC_UART_SetRXThreshold(uart, 1);
     if (retval != E_NO_ERROR) {
         return retval;
@@ -284,6 +279,7 @@ static int setup_rts_pin(void)
     hart_rts.pad = MXC_GPIO_PAD_NONE;
     hart_rts.func = MXC_GPIO_FUNC_OUT;
     hart_rts.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_rts.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_rts);
     if (retval != E_NO_ERROR) {
@@ -305,6 +301,7 @@ static int idle_rts_pin(void)
     hart_rts.pad = MXC_GPIO_PAD_PULL_DOWN;
     hart_rts.func = MXC_GPIO_FUNC_OUT;
     hart_rts.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_rts.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_rts);
     if (retval != E_NO_ERROR) {
@@ -324,6 +321,7 @@ static int setup_cd_pin(void)
     hart_cd.pad = MXC_GPIO_PAD_NONE;
     hart_cd.func = MXC_GPIO_FUNC_IN;
     hart_cd.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_cd.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_cd);
     if (retval != E_NO_ERROR) {
@@ -353,6 +351,7 @@ static int idle_cd_pin(void)
     hart_cd.pad = MXC_GPIO_PAD_PULL_DOWN;
     hart_cd.func = MXC_GPIO_FUNC_IN;
     hart_cd.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_cd.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_cd);
     if (retval != E_NO_ERROR) {
@@ -377,6 +376,7 @@ static int setup_hart_in_pin(void)
     hart_in.pad = MXC_GPIO_PAD_NONE;
     hart_in.func = MXC_GPIO_FUNC_OUT;
     hart_in.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_in.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_in);
     if (retval != E_NO_ERROR) {
@@ -399,6 +399,7 @@ static int idle_hart_in_pin(void)
     hart_in.pad = MXC_GPIO_PAD_PULL_DOWN;
     hart_in.func = MXC_GPIO_FUNC_OUT;
     hart_in.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_in.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_in);
     if (retval != E_NO_ERROR) {
@@ -418,6 +419,7 @@ static int setup_hart_out_pin(void)
     hart_out.pad = MXC_GPIO_PAD_NONE;
     hart_out.func = MXC_GPIO_FUNC_IN;
     hart_out.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_out.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_out);
     if (retval != E_NO_ERROR) {
@@ -437,6 +439,7 @@ static int idle_hart_out_pin(void)
     hart_out.pad = MXC_GPIO_PAD_PULL_DOWN;
     hart_out.func = MXC_GPIO_FUNC_OUT;
     hart_out.vssel = MXC_GPIO_VSSEL_VDDIOH;
+    hart_out.drvstr = MXC_GPIO_DRVSTR_0;
 
     retval = MXC_AFE_GPIO_Config(&hart_out);
     if (retval != E_NO_ERROR) {
@@ -479,6 +482,58 @@ static int hart_uart_pins_idle_mode(void)
     return retval;
 }
 
+static int hart_uart_pins_external_test_mode_state(void)
+{
+    int retval = 0;
+    mxc_gpio_cfg_t hart_pin;
+
+    // HART_RTS Input to AFE, LOW is transmit mode, so Pulling Up
+    hart_pin.port = HART_RTS_GPIO_PORT;
+    hart_pin.mask = HART_RTS_GPIO_PIN;
+    hart_pin.pad = MXC_GPIO_PAD_PULL_UP;
+    hart_pin.func = MXC_GPIO_FUNC_IN;
+
+    retval = MXC_AFE_GPIO_Config(&hart_pin);
+    if (retval != E_NO_ERROR) {
+        return retval;
+    }
+
+    // HART_CD output from AFE, Tristate
+    hart_pin.port = HART_CD_GPIO_PORT;
+    hart_pin.mask = HART_CD_GPIO_PIN;
+    hart_pin.pad = MXC_GPIO_PAD_NONE;
+    hart_pin.func = MXC_GPIO_FUNC_IN;
+
+    retval = MXC_AFE_GPIO_Config(&hart_pin);
+    if (retval != E_NO_ERROR) {
+        return retval;
+    }
+
+    // HART_IN input to AFE, pulling Up
+    hart_pin.port = HART_IN_GPIO_PORT;
+    hart_pin.mask = HART_IN_GPIO_PIN;
+    hart_pin.pad = MXC_GPIO_PAD_PULL_UP;
+    hart_pin.func = MXC_GPIO_FUNC_IN;
+
+    retval = MXC_AFE_GPIO_Config(&hart_pin);
+    if (retval != E_NO_ERROR) {
+        return retval;
+    }
+
+    // HART_OUT output from AFE, Tristate
+    hart_pin.port = HART_OUT_GPIO_PORT;
+    hart_pin.mask = HART_OUT_GPIO_PIN;
+    hart_pin.pad = MXC_GPIO_PAD_NONE;
+    hart_pin.func = MXC_GPIO_FUNC_IN;
+
+    retval = MXC_AFE_GPIO_Config(&hart_pin);
+    if (retval != E_NO_ERROR) {
+        return retval;
+    }
+
+    return retval;
+}
+
 void hart_rts_transmit_mode(void)
 {
     MXC_GPIO_OutClr(HART_RTS_GPIO_PORT, HART_RTS_GPIO_PIN);
@@ -505,6 +560,43 @@ void hart_sap_enable_request(uint32_t state)
             sap_callbacks.enable_confirm_cb(HART_STATE_IDLE);
         }
     }
+}
+
+int hart_reset_check_and_handle(void)
+{
+    int retval = E_NO_ERROR;
+    uint32_t read_val = 0;
+    uint32_t masked_read_val = 0;
+
+    // Check to see if HART is still enabled after a reset
+    retval = afe_read_register(MXC_R_AFE_ADC_ZERO_SYS_CTRL, &read_val);
+    if (retval != E_NO_ERROR) {
+        return retval;
+    }
+
+    // MASK off all status bits but HART_EN and ST_DIS
+    masked_read_val = read_val &
+                      (MXC_F_AFE_ADC_ZERO_SYS_CTRL_HART_EN | MXC_F_AFE_ADC_ZERO_SYS_CTRL_ST_DIS);
+
+    // If BOTH HART_EN and ST_DIS are set, then a NON-POR reset has occurred.
+    //  in this case we need to clear ST_DIS to allow the HART state machine to proceed
+    //  normally.
+    if (masked_read_val ==
+        (MXC_F_AFE_ADC_ZERO_SYS_CTRL_HART_EN | MXC_F_AFE_ADC_ZERO_SYS_CTRL_ST_DIS)) {
+        // Both HART_EN and ST_DIS are set. (NON POR reset indicated)
+
+        // Clear State Machine Disable
+        read_val &= ~MXC_F_AFE_ADC_ZERO_SYS_CTRL_ST_DIS;
+
+        retval = afe_write_register(MXC_R_AFE_ADC_ZERO_SYS_CTRL, read_val);
+        if (retval != E_NO_ERROR) {
+            return retval;
+        }
+    } else {
+        // HART_EN or ST_DIS are clear. (Normal, POR behavior)
+    }
+
+    return E_SUCCESS;
 }
 
 // TODO(ADI): Consider adding some parameters to this function to specify
@@ -564,9 +656,9 @@ int hart_clock_enable(void)
     pPTG->intfl = 0x01;
 
     //enable ISO before enabling ERFO
-    MXC_GCR->btleldoctrl |= (MXC_F_GCR_BTLELDOCTRL_LDOTXEN | MXC_F_GCR_BTLELDOCTRL_LDORXEN |
-                             MXC_F_GCR_BTLELDOCTRL_LDOTXVSEL0 | MXC_F_GCR_BTLELDOCTRL_LDOTXVSEL1 |
-                             MXC_F_GCR_BTLELDOCTRL_LDORXVSEL0 | MXC_F_GCR_BTLELDOCTRL_LDORXVSEL1);
+    MXC_GCR->btleldoctrl |=
+        (MXC_F_GCR_BTLELDOCTRL_LDORFEN | MXC_F_GCR_BTLELDOCTRL_LDOBBEN |
+         MXC_S_GCR_BTLELDOCTRL_LDORFVSEL_0_9 | MXC_S_GCR_BTLELDOCTRL_LDOBBVSEL_0_9);
 
     MXC_GCR->clkctrl |= MXC_F_GCR_CLKCTRL_ISO_EN;
 
@@ -816,28 +908,63 @@ int hart_uart_setup(uint32_t test_mode)
         // Test mode is required for physical layer test to output constant bit
         // Frequencies.
 
-        // Force mode for constant transmit.
-        retval = setup_hart_in_pin();
-        if (retval != E_NO_ERROR) {
-            return retval;
-        }
-
         if (test_mode == HART_TEST_MODE_TX_1200) {
+            // Force mode for constant transmit.
+            retval = setup_hart_in_pin();
+            if (retval != E_NO_ERROR) {
+                return retval;
+            }
+
             // Set (1) means 1200 signal
             MXC_GPIO_OutSet(HART_IN_GPIO_PORT, HART_IN_GPIO_PIN);
-        } else {
+
+            hart_rts_transmit_mode(); // start transmit
+        } else if (test_mode == HART_TEST_MODE_TX_2200) {
+            // Force mode for constant transmit.
+            retval = setup_hart_in_pin();
+            if (retval != E_NO_ERROR) {
+                return retval;
+            }
+
             // Clear (0) means 2200 signal
             MXC_GPIO_OutClr(HART_IN_GPIO_PORT, HART_IN_GPIO_PIN);
+
+            hart_rts_transmit_mode(); // start transmit
+        } else if (test_mode == HART_TEST_MODE_EXTERNAL) {
+            // Allow HART UART pins to be driven externally
+            retval = hart_uart_pins_external_test_mode_state();
+
+            if (retval != E_NO_ERROR) {
+                return retval;
+            }
+        } else {
+            // Unknown Mode
+            return E_BAD_PARAM;
         }
 
-        hart_rts_transmit_mode(); // start transmit
     } else {
         hart_rts_receive_mode();
 
-        retval = hart_uart_init(HART_UART_INSTANCE, 1200, MXC_UART_ERFO_CLK);
+        //
+        // NOTE: Need to use APB clock here instead of ERFO.
+        //   Otherwise in a case for ERFO clock is faster than the System/Peripheral
+        //   clock UART interrupts will not or only partially work.
+        //
+        retval = hart_uart_init(HART_UART_INSTANCE, 1200, MXC_UART_APB_CLK);
         if (retval != E_NO_ERROR) {
             return E_COMM_ERR;
         }
+    }
+
+    //
+    // In the case a NON POR reset occurred we must clear ST_DIS to allow normal
+    //  HART state machine behavior.  This is designed to prevent the HART state
+    //  machine from operating when a reset occurs, but leaves the internal and
+    //  external biases enabled.
+    //
+    retval = hart_reset_check_and_handle();
+    if (retval != E_NO_ERROR) {
+        return retval;
     }
 
     //
@@ -898,6 +1025,9 @@ int hart_uart_load_tx_fifo(void)
         return 0;
     }
 
+    // Ensure accurate index, dont allow uart interrupt while we manually load the fifo
+    MXC_UART_DisableInt(HART_UART_INSTANCE, (MXC_F_UART_INT_FL_TX_HE | MXC_F_UART_INT_FL_TX_OB));
+
     num_written = MXC_UART_WriteTXFIFO(
         HART_UART_INSTANCE, (const unsigned char *)(hart_buf + hart_uart_transmission_byte_index),
         load_num);
@@ -905,6 +1035,9 @@ int hart_uart_load_tx_fifo(void)
     // Advance index based on bytes actually written.
     // This should always equal load_num though.
     hart_uart_transmission_byte_index += num_written;
+
+    // Restore interrupts
+    MXC_UART_EnableInt(HART_UART_INSTANCE, (MXC_F_UART_INT_FL_TX_HE | MXC_F_UART_INT_FL_TX_OB));
 
     // Return the number actually written in case someone is interested.
     return num_written;
@@ -1193,7 +1326,7 @@ void hart_cd_isr(void *cbdata)
     }
 }
 
-int hart_uart_check_for_receive()
+int hart_uart_check_for_receive(void)
 {
     // NOTE: RTS is placed into receive mode by hart_uart_send
     // Receive mode is default operation for the HART UART

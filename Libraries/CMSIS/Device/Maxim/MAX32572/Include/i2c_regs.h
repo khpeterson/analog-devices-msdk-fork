@@ -2,43 +2,31 @@
  * @file    i2c_regs.h
  * @brief   Registers, Bit Masks and Bit Positions for the I2C Peripheral Module.
  * @note    This file is @generated.
+ * @ingroup i2c_registers
  */
 
 /******************************************************************************
- * Copyright (C) 2022 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
-#ifndef LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_I2C_REGS_H_
-#define LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_I2C_REGS_H_
+#ifndef LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_I2C_REGS_H_
+#define LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_I2C_REGS_H_
 
 /* **** Includes **** */
 #include <stdint.h>
@@ -62,7 +50,11 @@ extern "C" {
 #define __IO volatile
 #endif
 #ifndef __I
-#define __I  volatile const
+#ifdef __cplusplus
+#define __I volatile
+#else
+#define __I volatile const
+#endif
 #endif
 #ifndef __O
 #define __O  volatile
@@ -460,8 +452,8 @@ typedef struct {
 #define MXC_F_I2C_TXCTRL0_FLUSH_POS                    7 /**< TXCTRL0_FLUSH Position */
 #define MXC_F_I2C_TXCTRL0_FLUSH                        ((uint32_t)(0x1UL << MXC_F_I2C_TXCTRL0_FLUSH_POS)) /**< TXCTRL0_FLUSH Mask */
 
-#define MXC_F_I2C_TXCTRL0_THD_VAL_POS                  8 /**< TXCTRL0_THD_VAL Position */
-#define MXC_F_I2C_TXCTRL0_THD_VAL                      ((uint32_t)(0xFUL << MXC_F_I2C_TXCTRL0_THD_VAL_POS)) /**< TXCTRL0_THD_VAL Mask */
+#define MXC_F_I2C_TXCTRL0_THD_LVL_POS                  8 /**< TXCTRL0_THD_LVL Position */
+#define MXC_F_I2C_TXCTRL0_THD_LVL                      ((uint32_t)(0xFUL << MXC_F_I2C_TXCTRL0_THD_LVL_POS)) /**< TXCTRL0_THD_LVL Mask */
 
 /**@} end of group I2C_TXCTRL0_Register */
 
@@ -473,9 +465,6 @@ typedef struct {
  */
 #define MXC_F_I2C_TXCTRL1_PRELOAD_RDY_POS              0 /**< TXCTRL1_PRELOAD_RDY Position */
 #define MXC_F_I2C_TXCTRL1_PRELOAD_RDY                  ((uint32_t)(0x1UL << MXC_F_I2C_TXCTRL1_PRELOAD_RDY_POS)) /**< TXCTRL1_PRELOAD_RDY Mask */
-
-#define MXC_F_I2C_TXCTRL1_LAST_POS                     1 /**< TXCTRL1_LAST Position */
-#define MXC_F_I2C_TXCTRL1_LAST                         ((uint32_t)(0x1UL << MXC_F_I2C_TXCTRL1_LAST_POS)) /**< TXCTRL1_LAST Mask */
 
 #define MXC_F_I2C_TXCTRL1_LVL_POS                      8 /**< TXCTRL1_LVL Position */
 #define MXC_F_I2C_TXCTRL1_LVL                          ((uint32_t)(0xFUL << MXC_F_I2C_TXCTRL1_LVL_POS)) /**< TXCTRL1_LVL Mask */
@@ -510,12 +499,6 @@ typedef struct {
 
 #define MXC_F_I2C_MSTCTRL_EX_ADDR_EN_POS               7 /**< MSTCTRL_EX_ADDR_EN Position */
 #define MXC_F_I2C_MSTCTRL_EX_ADDR_EN                   ((uint32_t)(0x1UL << MXC_F_I2C_MSTCTRL_EX_ADDR_EN_POS)) /**< MSTCTRL_EX_ADDR_EN Mask */
-
-#define MXC_F_I2C_MSTCTRL_MST_CODE_POS                 8 /**< MSTCTRL_MST_CODE Position */
-#define MXC_F_I2C_MSTCTRL_MST_CODE                     ((uint32_t)(0x7UL << MXC_F_I2C_MSTCTRL_MST_CODE_POS)) /**< MSTCTRL_MST_CODE Mask */
-
-#define MXC_F_I2C_MSTCTRL_MST_IGN_ACK_POS              12 /**< MSTCTRL_MST_IGN_ACK Position */
-#define MXC_F_I2C_MSTCTRL_MST_IGN_ACK                  ((uint32_t)(0x1UL << MXC_F_I2C_MSTCTRL_MST_IGN_ACK_POS)) /**< MSTCTRL_MST_IGN_ACK Mask */
 
 /**@} end of group I2C_MSTCTRL_Register */
 
@@ -601,4 +584,4 @@ typedef struct {
 }
 #endif
 
-#endif // LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_I2C_REGS_H_
+#endif // LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_I2C_REGS_H_

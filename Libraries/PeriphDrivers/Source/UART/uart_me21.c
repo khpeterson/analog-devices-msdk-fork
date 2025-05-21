@@ -1,33 +1,20 @@
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -39,6 +26,30 @@
 #include "uart_common.h"
 #include "mcr_regs.h"
 #include "dma.h"
+
+sys_map_t uart_pin_mapping[4] = { MAP_A, MAP_A, MAP_A, MAP_A };
+/* Note(JC):               ^ Ideally I use MXC_UART_INSTANCES here...
+                ... but initializing the default value is problematic then.
+*/
+
+int MXC_UART_SetPinMapping(mxc_uart_regs_t *uart, sys_map_t pin_mapping)
+{
+    if (MXC_UART_GET_IDX(uart) < 0) {
+        return E_BAD_PARAM;
+    }
+
+    uart_pin_mapping[MXC_UART_GET_IDX(uart)] = pin_mapping;
+    return E_NO_ERROR;
+}
+
+inline sys_map_t MXC_UART_GetPinMapping(mxc_uart_regs_t *uart)
+{
+    if (MXC_UART_GET_IDX(uart) < 0) {
+        return E_BAD_PARAM;
+    }
+
+    return uart_pin_mapping[MXC_UART_GET_IDX(uart)];
+}
 
 void MXC_UART_DMACallback(int ch, int error)
 {
@@ -58,6 +69,8 @@ int MXC_UART_AsyncStop(mxc_uart_regs_t *uart)
 int MXC_UART_Init(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clock_t clock)
 {
     int retval;
+#ifndef MSDK_NO_GPIO_CLK_INIT
+    sys_map_t current_pin_mapping = MXC_UART_GetPinMapping(uart);
 
     retval = MXC_UART_Shutdown(uart);
 
@@ -65,59 +78,51 @@ int MXC_UART_Init(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clock_t clo
         return retval;
     }
 
-    switch (clock) {
-    case MXC_UART_EXT_CLK:
-        if (uart == MXC_UART3) {
-            MXC_GPIO_Config(&gpio_cfg_lpextclk);
-        } else {
-            MXC_GPIO_Config(&gpio_cfg_hfextclk);
-        }
-        break;
-
-    case MXC_UART_ERTCO_CLK:
-        MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_ERTCO);
-        break;
-
-    case MXC_UART_IBRO_CLK:
-        MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_IBRO);
-        break;
-
-    case MXC_UART_ERFO_CLK:
-        MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_ERFO);
-        break;
-
-    case MXC_UART_INRO_CLK:
-        MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_INRO);
-        break;
-
-    default:
-        break;
-    }
-
     switch (MXC_UART_GET_IDX(uart)) {
     case 0:
-        MXC_GPIO_Config(&gpio_cfg_uart0);
+        if (current_pin_mapping == MAP_A) {
+            MXC_GPIO_Config(&gpio_cfg_uart0);
+        } else if (current_pin_mapping == MAP_B) {
+            MXC_GPIO_Config(&gpio_cfg_uart0b);
+        }
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART0);
         break;
 
     case 1:
-        MXC_GPIO_Config(&gpio_cfg_uart1);
+        if (current_pin_mapping == MAP_A) {
+            MXC_GPIO_Config(&gpio_cfg_uart1);
+        } else if (current_pin_mapping == MAP_B) {
+            MXC_GPIO_Config(&gpio_cfg_uart1b);
+        }
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART1);
         break;
 
     case 2:
-        MXC_GPIO_Config(&gpio_cfg_uart2);
+        if (current_pin_mapping == MAP_A) {
+            MXC_GPIO_Config(&gpio_cfg_uart2);
+        } else if (current_pin_mapping == MAP_B) {
+            MXC_GPIO_Config(&gpio_cfg_uart2b);
+        }
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART2);
         break;
 
     case 3:
-        MXC_GPIO_Config(&gpio_cfg_uart3);
+        if (current_pin_mapping == MAP_A) {
+            MXC_GPIO_Config(&gpio_cfg_uart3);
+        } else if (current_pin_mapping == MAP_B) {
+            return E_BAD_PARAM; // UART 3 (LPUART0) does not have a map B
+        }
         MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_UART3);
         MXC_MCR->lppioctrl |= (MXC_F_MCR_LPPIOCTRL_LPUART0_RX | MXC_F_MCR_LPPIOCTRL_LPUART0_TX);
         break;
     }
+#endif // MSDK_NO_GPIO_CLK_INIT
 
-    return MXC_UART_RevB_Init((mxc_uart_revb_regs_t *)uart, baud, clock);
+    retval = MXC_UART_SetClockSource(uart, clock);
+    if (retval)
+        return retval;
+
+    return MXC_UART_RevB_Init((mxc_uart_revb_regs_t *)uart, baud, MXC_UART_GetClockSource(uart));
 }
 
 int MXC_UART_Shutdown(mxc_uart_regs_t *uart)
@@ -155,79 +160,62 @@ int MXC_UART_ReadyForSleep(mxc_uart_regs_t *uart)
 
 int MXC_UART_SetFrequency(mxc_uart_regs_t *uart, unsigned int baud, mxc_uart_clock_t clock)
 {
-    int freq;
-    int mod = 0;
-    int clkdiv = 0;
-    int div = 8;
+    int freq = 0;
+    uint32_t clock_freq = 0;
+    uint8_t aon_clk_div = 0;
 
     if (MXC_UART_GET_IDX(uart) < 0) {
         return E_BAD_PARAM;
     }
 
-    // check if the uart is LPUART
-    if (uart == MXC_UART3) {
-        // OSR default value
-        uart->osr = 5;
+    // OSR default value
+    uart->osr = 5;
 
-        switch (clock) {
-        case MXC_UART_APB_CLK:
-            uart->ctrl |= MXC_S_UART_CTRL_BCLKSRC_PERIPHERAL_CLOCK;
-            div = (1 << (MXC_GCR->pclkdiv & MXC_F_GCR_PCLKDIV_AON_CLKDIV)) * 8;
-            clkdiv = (SystemCoreClock / div) / baud;
-            mod = (SystemCoreClock / div) % baud;
-            break;
+    switch (clock) {
+    case MXC_UART_APB_CLK:
+        clock_freq = PeripheralClock;
+        break;
+    case MXC_UART_EXT_CLK:
+        uart->ctrl |= MXC_F_UART_CTRL_FDM;
+        clock_freq = EXTCLK_FREQ;
+        break;
+    case MXC_UART_IBRO_CLK:
+        clock_freq = IBRO_FREQ;
+        break;
+    case MXC_UART_INRO_CLK:
+        uart->ctrl |= MXC_F_UART_CTRL_FDM;
+        clock_freq = INRO_FREQ;
 
-        case MXC_UART_EXT_CLK:
-            uart->ctrl |= MXC_S_UART_CTRL_BCLKSRC_EXTERNAL_CLOCK;
-            uart->ctrl |= MXC_F_UART_CTRL_FDM;
-            clkdiv = ((EXTCLK2_FREQ * 2) / baud);
-            mod = ((EXTCLK2_FREQ * 2) % baud);
-            break;
-
-        case MXC_UART_ERTCO_CLK:
-            uart->ctrl |= MXC_S_UART_CTRL_BCLKSRC_CLK2;
-            uart->ctrl |= MXC_F_UART_CTRL_FDM;
-            if (baud == 9600) {
-                clkdiv = 7;
-                mod = 0;
-            } else {
-                clkdiv = ((ERTCO_FREQ * 2) / baud);
-                mod = ((ERTCO_FREQ * 2) % baud);
-            }
-
-            if (baud > 2400) {
-                uart->osr = 0;
-            } else {
-                uart->osr = 1;
-            }
-            break;
-
-        case MXC_UART_INRO_CLK:
-            uart->ctrl |= MXC_S_UART_CTRL_BCLKSRC_CLK3;
-            uart->ctrl |= MXC_F_UART_CTRL_FDM;
-            clkdiv = ((INRO_FREQ * 2) / baud);
-            mod = ((INRO_FREQ * 2) % baud);
-
-            if (baud > 2400) {
-                uart->osr = 0;
-            } else {
-                uart->osr = 1;
-            }
-            break;
-
-        default:
-            return E_BAD_PARAM;
+        if (baud > 2400) {
+            uart->osr = 0;
+        } else {
+            uart->osr = 1;
         }
+        break;
+    case MXC_UART_ERTCO_CLK:
+        uart->ctrl |= MXC_F_UART_CTRL_FDM;
+        clock_freq = ERTCO_FREQ;
 
-        if (!clkdiv || mod > (baud / 2)) {
-            clkdiv++;
+        if (baud > 2400) {
+            uart->osr = 0;
+        } else {
+            uart->osr = 1;
         }
-        uart->clkdiv = clkdiv;
-
-        freq = MXC_UART_GetFrequency(uart);
-    } else {
-        freq = MXC_UART_RevB_SetFrequency((mxc_uart_revb_regs_t *)uart, baud, clock);
+        break;
+    case MXC_UART_AOD_CLK:
+        aon_clk_div = (MXC_GCR->pclkdiv & MXC_F_GCR_PCLKDIV_AON_CLKDIV) >>
+                      MXC_F_GCR_PCLKDIV_AON_CLKDIV_POS;
+        clock_freq = PeripheralClock / (4 * (1 << aon_clk_div));
+        break;
+    default:
+        return E_BAD_PARAM;
     }
+
+    if (uart->ctrl & MXC_F_UART_CTRL_FDM) {
+        clock_freq *= 2; // x2 to account for FDM
+    }
+
+    freq = MXC_UART_RevB_SetFrequency((mxc_uart_revb_regs_t *)uart, clock_freq, baud);
 
     if (freq > 0) {
         // Enable baud clock and wait for it to become ready.
@@ -249,7 +237,7 @@ int MXC_UART_GetFrequency(mxc_uart_regs_t *uart)
 
     // check if UARt is LP UART
     if (uart == MXC_UART3) {
-        if ((uart->ctrl & MXC_F_UART_CTRL_BCLKSRC) == MXC_S_UART_CTRL_BCLKSRC_EXTERNAL_CLOCK) {
+        if ((uart->ctrl & MXC_F_UART_CTRL_BCLKSRC) == MXC_S_UART_REVB_CTRL_BCLKSRC_CLK1) {
             periphClock = EXTCLK2_FREQ * 2;
         } else if ((uart->ctrl & MXC_F_UART_CTRL_BCLKSRC) ==
                    MXC_S_UART_CTRL_BCLKSRC_PERIPHERAL_CLOCK) {
@@ -334,7 +322,113 @@ int MXC_UART_SetFlowCtrl(mxc_uart_regs_t *uart, mxc_uart_flow_t flowCtrl, int rt
 
 int MXC_UART_SetClockSource(mxc_uart_regs_t *uart, mxc_uart_clock_t clock)
 {
-    return MXC_UART_RevB_SetClockSource((mxc_uart_revb_regs_t *)uart, clock);
+    int retval = E_NO_ERROR;
+    uint8_t clock_option = 0;
+
+    switch (MXC_UART_GET_IDX(uart)) {
+    case 0:
+    case 1:
+    case 2:
+        // UART0-2 support PCLK and IBRO
+        switch (clock) {
+        case MXC_UART_APB_CLK:
+            clock_option = 0;
+            break;
+
+        case MXC_UART_EXT_CLK:
+#ifndef MSDK_NO_GPIO_CLK_INIT
+            retval = MXC_GPIO_Config(&gpio_cfg_hfextclk);
+#endif // MSDK_NO_GPIO_CLK_INIT
+            clock_option = 1;
+            break;
+
+        case MXC_UART_IBRO_CLK:
+#ifndef MSDK_NO_GPIO_CLK_INIT
+            retval = MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_IBRO);
+#endif // MSDK_NO_GPIO_CLK_INIT
+            clock_option = 2;
+            break;
+
+        default:
+            return E_BAD_PARAM;
+        }
+        break;
+
+    case 3:
+        // UART3 (LPUART0) supports IBRO and ERTCO
+        switch (clock) {
+        case MXC_UART_AOD_CLK:
+            clock_option = 0;
+            break;
+
+        case MXC_UART_EXT_CLK:
+#ifndef MSDK_NO_GPIO_CLK_INIT
+            retval = MXC_GPIO_Config(&gpio_cfg_lpextclk);
+#endif // MSDK_NO_GPIO_CLK_INIT
+            clock_option = 1;
+            break;
+
+        case MXC_UART_INRO_CLK:
+            clock_option = 2;
+            break;
+
+        case MXC_UART_ERTCO_CLK:
+#ifndef MSDK_NO_GPIO_CLK_INIT
+            retval = MXC_SYS_ClockSourceEnable(MXC_SYS_CLOCK_ERTCO);
+#endif // MSDK_NO_GPIO_CLK_INIT
+            clock_option = 3;
+            break;
+
+        default:
+            return E_BAD_PARAM;
+        }
+        break;
+
+    default:
+        return E_BAD_PARAM;
+    }
+
+    if (retval)
+        return retval;
+
+    return MXC_UART_RevB_SetClockSource((mxc_uart_revb_regs_t *)uart, clock_option);
+}
+
+mxc_uart_clock_t MXC_UART_GetClockSource(mxc_uart_regs_t *uart)
+{
+    unsigned int clock_option = MXC_UART_RevB_GetClockSource((mxc_uart_revb_regs_t *)uart);
+    switch (MXC_UART_GET_IDX(uart)) {
+    case 0:
+    case 1:
+    case 2:
+        switch (clock_option) {
+        case 0:
+            return MXC_UART_APB_CLK;
+        case 1:
+            return MXC_UART_EXT_CLK;
+        case 2:
+            return MXC_UART_IBRO_CLK;
+        default:
+            return E_BAD_STATE;
+        }
+        break;
+    case 3:
+        switch (clock_option) {
+        case 0:
+            return MXC_UART_AOD_CLK;
+        case 1:
+            return MXC_UART_EXT_CLK;
+        case 2:
+            return MXC_UART_INRO_CLK;
+        case 3:
+            return MXC_UART_ERTCO_CLK;
+        default:
+            return E_BAD_STATE;
+        }
+        break;
+    default:
+        return E_BAD_PARAM;
+    }
 }
 
 int MXC_UART_GetActive(mxc_uart_regs_t *uart)
@@ -407,7 +501,8 @@ int MXC_UART_ReadRXFIFODMA(mxc_uart_regs_t *uart, unsigned char *bytes, unsigned
         break;
     }
 
-    return MXC_UART_RevB_ReadRXFIFODMA((mxc_uart_revb_regs_t *)uart, bytes, len, callback, config);
+    return MXC_UART_RevB_ReadRXFIFODMA((mxc_uart_revb_regs_t *)uart, MXC_DMA, bytes, len, callback,
+                                       config);
 }
 
 unsigned int MXC_UART_GetRXFIFOAvailable(mxc_uart_regs_t *uart)
@@ -445,7 +540,8 @@ int MXC_UART_WriteTXFIFODMA(mxc_uart_regs_t *uart, unsigned char *bytes, unsigne
         break;
     }
 
-    return MXC_UART_RevB_WriteTXFIFODMA((mxc_uart_revb_regs_t *)uart, bytes, len, callback, config);
+    return MXC_UART_RevB_WriteTXFIFODMA((mxc_uart_revb_regs_t *)uart, MXC_DMA, bytes, len, callback,
+                                        config);
 }
 
 unsigned int MXC_UART_GetTXFIFOAvailable(mxc_uart_regs_t *uart)
@@ -512,26 +608,17 @@ unsigned int MXC_UART_GetStatus(mxc_uart_regs_t *uart)
 
 int MXC_UART_Transaction(mxc_uart_req_t *req)
 {
-    MXC_UART_ClearRXFIFO(req->uart);
-    MXC_UART_ClearTXFIFO(req->uart);
-
     return MXC_UART_RevB_Transaction((mxc_uart_revb_req_t *)req);
 }
 
 int MXC_UART_TransactionAsync(mxc_uart_req_t *req)
 {
-    MXC_UART_ClearRXFIFO(req->uart);
-    MXC_UART_ClearTXFIFO(req->uart);
-
     return MXC_UART_RevB_TransactionAsync((mxc_uart_revb_req_t *)req);
 }
 
 int MXC_UART_TransactionDMA(mxc_uart_req_t *req)
 {
-    MXC_UART_ClearRXFIFO(req->uart);
-    MXC_UART_ClearTXFIFO(req->uart);
-
-    return MXC_UART_RevB_TransactionDMA((mxc_uart_revb_req_t *)req);
+    return MXC_UART_RevB_TransactionDMA((mxc_uart_revb_req_t *)req, MXC_DMA);
 }
 
 int MXC_UART_AbortAsync(mxc_uart_regs_t *uart)
@@ -552,4 +639,29 @@ uint32_t MXC_UART_GetAsyncTXCount(mxc_uart_req_t *req)
 uint32_t MXC_UART_GetAsyncRXCount(mxc_uart_req_t *req)
 {
     return req->rxCnt;
+}
+
+int MXC_UART_SetAutoDMAHandlers(mxc_uart_regs_t *uart, bool enable)
+{
+    return MXC_UART_RevB_SetAutoDMAHandlers((mxc_uart_revb_regs_t *)uart, enable);
+}
+
+int MXC_UART_SetTXDMAChannel(mxc_uart_regs_t *uart, unsigned int channel)
+{
+    return MXC_UART_RevB_SetTXDMAChannel((mxc_uart_revb_regs_t *)uart, channel);
+}
+
+int MXC_UART_GetTXDMAChannel(mxc_uart_regs_t *uart)
+{
+    return MXC_UART_RevB_GetTXDMAChannel((mxc_uart_revb_regs_t *)uart);
+}
+
+int MXC_UART_SetRXDMAChannel(mxc_uart_regs_t *uart, unsigned int channel)
+{
+    return MXC_UART_RevB_SetRXDMAChannel((mxc_uart_revb_regs_t *)uart, channel);
+}
+
+int MXC_UART_GetRXDMAChannel(mxc_uart_regs_t *uart)
+{
+    return MXC_UART_RevB_GetTXDMAChannel((mxc_uart_revb_regs_t *)uart);
 }

@@ -1,33 +1,21 @@
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc. All Rights Reserved. This software
+ * is proprietary to Analog Devices, Inc. and its licensors.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -35,6 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "mxc_device.h"
 #include "mxc_delay.h"
@@ -129,8 +118,8 @@ typedef struct {
 
 #pragma pack()
 
-extern unsigned int _bin_start_; // binary start address, defined in linker file
-extern unsigned int _bin_end_; // binary end address, defined in linker file
+extern unsigned char _bin_start_[]; // binary start address, defined in linker file
+extern unsigned char _bin_end_; // binary end address, defined in linker file
 static unsigned char *images_start_addr = NULL;
 static Header_images_t images_header;
 
@@ -207,15 +196,8 @@ static void spi_transmit(void *datain, unsigned int count)
     volatile uint16_t *u16ptrin = (volatile uint16_t *)datain;
     unsigned int start = 0;
 
-    MXC_SPI_SetFrequency((mxc_spi_regs_t *)spi, tft_spi_freq);
-    MXC_SPI_SetDataSize((mxc_spi_regs_t *)spi, 9);
-
     // HW requires disabling/renabling SPI block at end of each transaction (when SS is inactive).
     spi->ctrl0 &= ~(MXC_F_SPI_CTRL0_EN);
-
-    // Setup the slave select
-    MXC_SETFIELD(spi->ctrl0, MXC_F_SPI_CTRL0_SS_ACTIVE,
-                 ((1 << ssel) << MXC_F_SPI_CTRL0_SS_ACTIVE_POS));
 
     // number of RX Char is 0xffff
     spi->ctrl1 &= ~(MXC_F_SPI_CTRL1_RX_NUM_CHAR);
@@ -529,6 +511,7 @@ static void tft_spi_init(void)
     tft_pins.mosi = true; ///< mosi pin
     tft_pins.sdio2 = false; ///< SDIO2 pin
     tft_pins.sdio3 = false; ///< SDIO3 pin
+    tft_pins.vddioh = true;
 
     MXC_SPI_Init((mxc_spi_regs_t *)spi, master, quadMode, numSlaves, ssPol, tft_spi_freq, tft_pins);
 #endif
@@ -537,6 +520,10 @@ static void tft_spi_init(void)
     MXC_GPIO_SetVSSEL(g_spi_gpio.port, g_spi_gpio.vssel, g_spi_gpio.mask);
     MXC_SPI_SetDataSize((mxc_spi_regs_t *)spi, 9);
     MXC_SPI_SetWidth((mxc_spi_regs_t *)spi, SPI_WIDTH_STANDARD);
+    MXC_SPI_SetFrequency((mxc_spi_regs_t *)spi, tft_spi_freq);
+    // Setup the slave select
+    MXC_SETFIELD(spi->ctrl0, MXC_F_SPI_CTRL0_SS_ACTIVE,
+                 ((1 << ssel) << MXC_F_SPI_CTRL0_SS_ACTIVE_POS));
 }
 
 static void displayInit(void)
@@ -938,8 +925,8 @@ int MXC_TFT_Init(void)
     memset(&images_header, 0, sizeof(Header_images_t));
 
     // Is there any image data to work with?
-    if (_bin_start_ != _bin_end_) {
-        images_start_addr = (unsigned char *)&_bin_start_;
+    if (_bin_start_ != &_bin_end_) {
+        images_start_addr = _bin_start_;
         // set header
         memcpy(&images_header, images_start_addr, sizeof(Header_images_t));
     }
@@ -1210,6 +1197,350 @@ void MXC_TFT_FillRect(area_t *area, int color)
     __enable_irq();
 }
 
+void MXC_TFT_DrawImage(int px_x, int px_y, int width, int height, uint32_t **image_2D)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            g_fifo[0] = image_2D[y][x];
+            spi_transmit((uint16_t *)g_fifo, 2);
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawBitmap(int px_x, int px_y, int width, int height, uint16_t *image)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    int i = 0;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            g_fifo[0] = (0x01000100 | ((uint32_t)(image[i] & 0x00FF)) |
+                         (uint32_t)((image[i] & 0xFF00) << 8));
+            spi_transmit((uint16_t *)g_fifo, 2);
+            i += 1;
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawBitmapInverted(int px_x, int px_y, int width, int height, uint16_t *image)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    int i = 0;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            g_fifo[0] = (0x01000100 | ((uint32_t)(~image[i] & 0x00FF) << 16) |
+                         (uint32_t)((~image[i] & 0xFF00) >> 8));
+            spi_transmit((uint16_t *)g_fifo, 2);
+            i += 1;
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawBitmapMask(int px_x, int px_y, int width, int height, uint16_t *image,
+                            uint16_t original_color, uint16_t mask)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    int i = 0;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            if (image[i] == original_color) {
+                g_fifo[0] = (0x01000100 | ((uint32_t)(mask & 0x00FF) << 16) |
+                             (uint32_t)((mask & 0xFF00) >> 8));
+            } else {
+                g_fifo[0] = (0x01000100 | ((uint32_t)(image[i] & 0x00FF) << 16) |
+                             (uint32_t)((image[i] & 0xFF00) >> 8));
+            }
+            spi_transmit((uint16_t *)g_fifo, 2);
+            i += 1;
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawBitmapInvertedMask(int px_x, int px_y, int width, int height, uint16_t *image,
+                                    uint16_t original_color, uint16_t mask)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    int i = 0;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            if (image[i] == original_color) {
+                g_fifo[0] = (0x01000100 | ((uint32_t)(mask & 0x00FF) << 16) |
+                             (uint32_t)((mask & 0xFF00) >> 8));
+            } else {
+                g_fifo[0] = (0x01000100 | ((uint32_t)(~image[i] & 0x00FF) << 16) |
+                             (uint32_t)((~image[i] & 0xFF00) >> 8));
+            }
+            spi_transmit((uint16_t *)g_fifo, 2);
+            i += 1;
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawVerticalLine(int px_x, int px_y, int height, uint32_t color)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = 1;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            g_fifo[0] = color;
+
+            spi_transmit((uint16_t *)g_fifo, 2);
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawHorizontalLine(int px_x, int px_y, int width, uint32_t color)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = px_x;
+    area->y = px_y;
+    area->w = width;
+    area->h = 1;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            g_fifo[0] = color;
+
+            spi_transmit((uint16_t *)g_fifo, 2);
+        }
+    }
+
+    __enable_irq();
+}
+
+void MXC_TFT_DrawRect(int pixelX, int pixelY, int width, int height, uint32_t color)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = pixelX;
+    area->y = pixelY;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, i, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if (tft_rotation == SCREEN_NORMAL || tft_rotation == SCREEN_FLIP) {
+        if ((area->x + w) > DISPLAY_WIDTH) {
+            w = DISPLAY_WIDTH - area->x;
+        }
+
+        if ((area->y + h) > DISPLAY_HEIGHT) {
+            h = DISPLAY_HEIGHT - area->y;
+        }
+
+        displaySub(area->x, area->y, w, h);
+
+    } else if (tft_rotation == SCREEN_ROTATE) {
+        if ((area->x + w) > DISPLAY_HEIGHT) {
+            w = DISPLAY_HEIGHT - area->x;
+        }
+
+        if ((area->y + h) > DISPLAY_WIDTH) {
+            h = DISPLAY_WIDTH - area->y;
+        }
+
+        displaySub_Rotated(area->x, area->y, w, h);
+    }
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < (w >> 2); x++) {
+            for (i = 0; i < 4; i++) {
+                g_fifo[i] = color;
+            }
+
+            spi_transmit((uint16_t *)g_fifo, 8);
+        }
+
+        x <<= 2;
+
+        for (; x < w; x++) {
+            write_color(color);
+        }
+    }
+
+    __enable_irq();
+}
+
 void MXC_TFT_WritePixel(int pixelX, int pixelY, int width, int height, uint32_t color)
 {
     area_t _area;
@@ -1272,6 +1603,55 @@ void MXC_TFT_PrintPalette(void)
     }
 }
 
+void MXC_TFT_DrawRoundedRect(int pixelX, int pixelY, int width, int height, uint32_t color,
+                             int radius, uint32_t background_color)
+{
+    area_t _area;
+    area_t *area;
+
+    area = &_area;
+    area->x = pixelX;
+    area->y = pixelY;
+    area->w = width;
+    area->h = height;
+
+    __disable_irq();
+    int y, x, h, w;
+
+    w = area->w;
+    h = area->h;
+
+    if ((area->x + w) > DISPLAY_WIDTH) {
+        w = DISPLAY_WIDTH - area->x;
+    }
+
+    if ((area->y + h) > DISPLAY_HEIGHT) {
+        h = DISPLAY_HEIGHT - area->y;
+    }
+
+    displaySub(area->x, area->y, w, h);
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            // Calculate distance from the corner.
+            int dx = (x < radius) ? radius - x : (x >= w - radius) ? x - (w - radius - 1) : 0;
+            int dy = (y < radius) ? radius - y : (y >= h - radius) ? y - (h - radius - 1) : 0;
+
+            // Use pythagorean theorem to map coordinates, square not necessary when comparing with r.
+            if (((dx * dx) + (dy * dy)) <= (radius * radius)) {
+                *g_fifo = color;
+                spi_transmit((uint16_t *)g_fifo, 2);
+
+            } else {
+                *g_fifo = background_color;
+                spi_transmit((uint16_t *)g_fifo, 2);
+            }
+        }
+    }
+
+    __enable_irq();
+}
+
 /***************************************************************
  *          Printf Functions
  ***************************************************************/
@@ -1288,9 +1668,12 @@ void MXC_TFT_SetFont(int font_id)
 
 void MXC_TFT_Printf(const char *format, ...)
 {
-    char str[100];
+    char str[100] = { 0 };
+    va_list args;
 
-    snprintf(str, sizeof(str), format, *((&format) + 1), *((&format) + 2), *((&format) + 3));
+    va_start(args, format);
+    vsnprintf(str, sizeof(str), format, args);
+    va_end(args);
 
     printCursor(str); //printf_message
 }

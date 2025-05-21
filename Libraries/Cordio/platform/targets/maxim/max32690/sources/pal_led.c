@@ -14,31 +14,30 @@
  * Agreement do not use this file and delete all copies in your possession or control;
  * if you do not have a copy of the Agreement, you must contact Packetcraft, Inc. prior
  * to any use, copying or further distribution of this software.
+ *
+ * Copyright (c) 2022-2023 Analog Devices, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 /*************************************************************************************************/
 
 #include "pal_led.h"
 #include "gpio.h"
+#include "led.h"
+
 /**************************************************************************************************
   Macros
 **************************************************************************************************/
-
-#ifndef PAL_BB_LED_ENABLED
-#define PAL_BB_LED_ENABLED    1
-#endif
-
-#define PAL_BB_LED_TX         0x81
-#define PAL_BB_LED_RX         0x82
-#define PAL_BB_LED_RX_OK      0x84
-#define PAL_BB_LED_RX_TO      0x88
-#define PAL_BB_LED_RX_CRC     0x90
-
-/* BSP LED Driver */
-extern const unsigned int num_leds;
-extern int LED_Init(void);
-extern void LED_On(unsigned int idx);
-extern void LED_Off(unsigned int idx);
-extern const mxc_gpio_cfg_t led_pin[];
 
 /**************************************************************************************************
   Local Variables
@@ -53,12 +52,9 @@ static struct {
   Functions: Initialization
 **************************************************************************************************/
 
-
-
 /**************************************************************************************************
   Functions: Status and Control
 **************************************************************************************************/
-
 
 /*************************************************************************************************/
 /*!
@@ -116,8 +112,8 @@ void PalLedInit(void)
 /*************************************************************************************************/
 void PalLedDeInit(void)
 {
-  palLedOff(0);
-  palLedOff(1);
+  PalLedOff(PAL_LED_ID_CPU_ACTIVE);
+  PalLedOff(PAL_LED_ID_ERROR);
   palLedCb.init = FALSE;
 }
 
@@ -142,7 +138,7 @@ void PalLedOn(uint8_t ledId)
 #ifndef __riscv
       palLedOn(1);
 #else
-      palLedOn(0);    /* D1: red */
+      palLedOn(0);
 #endif
       return;
     case PAL_LED_ID_ERROR:
@@ -150,20 +146,9 @@ void PalLedOn(uint8_t ledId)
       return;
 
     default:
+      palLedOn(ledId);
       break;
   }
-
-#if (PAL_BB_LED_ENABLED == 1)
-    if(ledId & 0x80){
-      /* Remap the mask for the BB LEDs */
-      int i;
-      for(i = 0; i < 7; i++) {
-        if(ledId & (0x1 << i)) {
-          palLedOn(2+i);
-        }
-      }
-    }
-#endif
 }
 
 /*************************************************************************************************/
@@ -186,7 +171,7 @@ void PalLedOff(uint8_t ledId)
 #ifndef __riscv
       palLedOff(1);
 #else
-      palLedOff(0);   /* D1: red */
+      palLedOff(0);
 #endif
       return;
     case PAL_LED_ID_ERROR:
@@ -194,52 +179,7 @@ void PalLedOff(uint8_t ledId)
       return;
 
     default:
+      palLedOff(ledId);
       break;
   }
-
-#if (PAL_BB_LED_ENABLED == 1)
-    if(ledId & 0x80){
-      /* Remap the mask for the BB LEDs */
-      int i;
-      for(i = 0; i < 7; i++) {
-        if(ledId & (0x1 << i)) {
-          palLedOff(2+i);
-        }
-      }
-    }
-#endif
-}
-/*************************************************************************************************/
-/*!
- *  \brief      Set LED On Fast as possible, by eliminating overhead.
- *
- *  \param      ledId           LED ID.
- *
- *  \return     None.
- */
-/*************************************************************************************************/
-void PalLedFastOn(uint8_t id)
-{
-    #if LED_ON == 0
-        led_pin[id].port->out_clr = led_pin[id].mask;
-    #else
-        led_pin[id].port->out_set = led_pin[id].mask;
-    #endif
-}
-/*************************************************************************************************/
-/*!
- *  \brief      Set LED Off Fast as possible, by eliminating overhead.
- *
- *  \param      ledId           LED ID.
- *
- *  \return     None.
- */
-/*************************************************************************************************/
-void PalLedFastOff(uint8_t id)
-{
-  #if LED_ON == 0
-        led_pin[id].port->out_set = led_pin[id].mask;
-    #else
-        led_pin[id].port->out_clr = led_pin[id].mask;
-    #endif
 }

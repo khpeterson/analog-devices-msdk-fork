@@ -1,35 +1,88 @@
+###############################################################################
+ #
+ # Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by
+ # Analog Devices, Inc.),
+ # Copyright (C) 2023-2024 Analog Devices, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ #
+ ##############################################################################
+
 ################################################################################
- # Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
- #
- # Permission is hereby granted, free of charge, to any person obtaining a
- # copy of this software and associated documentation files (the "Software"),
- # to deal in the Software without restriction, including without limitation
- # the rights to use, copy, modify, merge, publish, distribute, sublicense,
- # and/or sell copies of the Software, and to permit persons to whom the
- # Software is furnished to do so, subject to the following conditions:
- #
- # The above copyright notice and this permission notice shall be included
- # in all copies or substantial portions of the Software.
- #
- # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- # IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- # OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- # OTHER DEALINGS IN THE SOFTWARE.
- #
- # Except as contained in this notice, the name of Maxim Integrated
- # Products, Inc. shall not be used except as stated in the Maxim Integrated
- # Products, Inc. Branding Policy.
- #
- # The mere transfer of this software does not imply any licenses
- # of trade secrets, proprietary technology, copyrights, patents,
- # trademarks, maskwork rights, or any other form of intellectual
- # property whatsoever. Maxim Integrated Products, Inc. retains all
- # ownership rights.
- #
- ###############################################################################
+# Detect whether we're working from the Github repo or not.
+# If so, attempt to update the version number files every time we build.
+
+ifeq "$(PYTHON_CMD)" ""
+# Try python
+ifneq "$(wildcard $(MAXIM_PATH)/.github)" ""
+PYTHON_VERSION := $(shell python --version)
+ifneq ($(.SHELLSTATUS),0)
+PYTHON_CMD := none
+else
+PYTHON_CMD := python
+endif
+
+# Try python3
+ifeq "$(PYTHON_CMD)" "none"
+PYTHON_VERSION := $(shell python3 --version)
+ifneq ($(.SHELLSTATUS),0)
+PYTHON_CMD := none
+else
+PYTHON_CMD := python
+endif
+endif
+
+# Export PYTHON_CMD so we don't check for it again unnecessarily
+export PYTHON_CMD
+endif
+
+# Make sure script exists before running. This won't run when working in the official MSDK release (non-GitHub)
+ifneq ("$(wildcard $(MAXIM_PATH)/.github)", "")
+# Run script if exists.
+ifneq "$(PYTHON_CMD)" "none"
+UPDATE_VERSION_OUTPUT := $(shell python $(MAXIM_PATH)/.github/workflows/scripts/update_version.py)
+else
+$(warning No Python installation detected on your system!  Will not automatically update version info.)
+endif 
+endif
+endif
+
+ifneq "$(wildcard $(MAXIM_PATH)/Libraries/CMSIS/Device/Maxim/GCC/mxc_version.mk)" ""
+include $(MAXIM_PATH)/Libraries/CMSIS/Device/Maxim/GCC/mxc_version.mk
+endif
+################################################################################
+
+SUPPRESS_HELP ?= 0
+ifeq "$(SUPPRESS_HELP)" "0"
+ifneq "$(HELP_COMPLETE)" "1"
+
+$(info ****************************************************************************)
+$(info * Analog Devices MSDK)
+ifneq "$(MSDK_VERSION_STRING)" ""
+$(info * $(MSDK_VERSION_STRING))
+endif
+$(info * - User Guide: https://analogdevicesinc.github.io/msdk/USERGUIDE/)
+$(info * - Get Support: https://www.analog.com/support/technical-support.html)
+$(info * - Report Issues: https://github.com/analogdevicesinc/msdk/issues)
+$(info * - Contributing: https://analogdevicesinc.github.io/msdk/CONTRIBUTING/)
+$(info ****************************************************************************)
+# export HELP_COMPLETE so that it's only printed once.
+HELP_COMPLETE = 1
+export HELP_COMPLETE
+endif
+endif
+
+################################################################################
 
 # The build directory
 ifeq "$(BUILD_DIR)" ""
@@ -50,6 +103,9 @@ OBJS_NOPATH += $(BINS_NOPATH:.bin=.o)
 OBJS        := $(OBJS_NOPATH:%.o=$(BUILD_DIR)/%.o)
 OBJS        += $(PROJ_OBJS)
 
+
+################################################################################
+# Goals
 ################################################################################
 # Get the operating system name.  If this is Cygwin, the .d files will be
 # munged to convert c: into /cygdrive/c so that "make" will be happy with the
@@ -74,7 +130,7 @@ UNAME_RESULT := $(shell uname -s 2>&1)
 # variable will still be set to Windows_NT since we configure
 # MSYS2 to inherit from Windows by default.
 # Here we'll attempt to call uname (only present on MSYS2)
-# while routing stderr -> stdout to avoid throwing an error 
+# while routing stderr -> stdout to avoid throwing an error
 # if uname can't be found.
 ifneq ($(findstring CYGWIN, $(UNAME_RESULT)), )
 CYGWIN=True
@@ -91,7 +147,7 @@ _OS = windows_msys
 endif
 
 else # OS
-
+$(info "")
 UNAME_RESULT := $(shell uname -s)
 ifeq "$(UNAME_RESULT)" "Linux"
 _OS = linux
@@ -103,9 +159,6 @@ endif
 endif
 
 endif
-
-################################################################################
-# Goals
 
 # The default goal, which causes the example to be built.
 .DEFAULT_GOAL :=
@@ -191,25 +244,98 @@ GCCVERSIONGTEQ4 := 1
 
 # endif
 
-# The flags passed to the assembler.
-AFLAGS=-mthumb         \
-       -mcpu=cortex-m4 \
-       -MD
-ifneq "$(HEAP_SIZE)" ""
-AFLAGS+=-D__HEAP_SIZE=$(HEAP_SIZE)
-endif
-ifneq "$(STACK_SIZE)" ""
-AFLAGS+=-D__STACK_SIZE=$(STACK_SIZE)
-endif
-ifneq "$(SRAM_SIZE)" ""
-AFLAGS+=-D__SRAM_SIZE=$(SRAM_SIZE)
-endif
-AFLAGS+=$(PROJ_AFLAGS)
-
 ifeq "$(MXC_OPTIMIZE_CFLAGS)" ""
 # Default is optimize for size
 MXC_OPTIMIZE_CFLAGS = -Os
 endif
+
+# Select the target ARM processor.
+# Permissible options can be found under the "-mtune" documentation in the GCC manual
+# https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
+# Our hardware currently supports
+# - cortex-m4 (default)
+# - cortex-m33
+MCPU ?= cortex-m4
+
+ifeq "$(MCPU)" "cortex-m33"
+
+# Build a project with TrustZone.
+# Acceptable values are
+# - 0 (default) : The project builds as a Secure-only project (development similar to Cortex-M4 examples).
+# - 1 		    : The project builds with both Secure and Non-Secure context.
+#
+# When "0" is selected, the project will build as a Secure-only project with no TrustZone features enabled.
+# Development is similar to other Cortex-M4 examples.
+# 
+# When "1" is selected, the build system will build a Secure and Non-Secure project separately, then link
+# the two images into one combined image.
+TRUSTZONE ?= 0
+
+# Security mode for the target processor.
+# Acceptable values are
+# - SECURE
+# - NONSECURE
+#
+# The core, by default, starts up in Secure mode.
+#
+# When "SECURE" is selected, the build system will link the program binary into the secure
+# memory sections and map peripheral instances onto their corresponding secure
+# address aliases.  "MSECURITY_MODE_SECURE" will be defined at compile time.
+#
+# When "NONSECURE" is selected, the program binary will be linked into the non-secure memory
+# sections and peripherals will be mapped onto the non-secure address aliases.
+# It should be noted that the M33 will boot into secure mode by default, which has access to
+# both the secure and non-secure addresses and aliases.  "MSECURITY_MODE_NONSECURE" will be defined
+# at compile time.
+MSECURITY_MODE ?= SECURE
+
+# Not accessible in {device}_files.mk without this.
+export MSECURITY_MODE
+
+ifeq "$(MSECURITY_MODE)" "SECURE"
+# Align with Zephyr flags.
+PROJ_AFLAGS += -DCONFIG_TRUSTED_EXECUTION_SECURE=1
+PROJ_CFLAGS += -DCONFIG_TRUSTED_EXECUTION_SECURE=1
+
+# Leaving these to support initial development.
+PROJ_AFLAGS += -DIS_SECURE_ENVIRONMENT=1
+PROJ_CFLAGS += -DIS_SECURE_ENVIRONMENT=1
+else
+# Align with Zephyr flags.
+# Must be defined for the BLE build system.
+PROJ_AFLAGS += -DCONFIG_TRUSTED_EXECUTION_SECURE=0
+PROJ_CFLAGS += -DCONFIG_TRUSTED_EXECUTION_SECURE=0
+
+# Leaving these to support initial development.
+PROJ_AFLAGS += -DIS_SECURE_ENVIRONMENT=0
+PROJ_CFLAGS += -DIS_SECURE_ENVIRONMENT=0
+endif
+
+ifeq ($(TRUSTZONE),1)
+
+# Select whether the CMSE importlib object file is generated.
+# - 0 (default) : Do no generate object file.
+# - 1			: Generate object file.
+#
+# The Secure project needs to generate the object file with empty definitions of
+# secure symbols at the right locations. The Non-Secure project needs to be linked
+# with the generated object file.
+GEN_CMSE_IMPLIB_OBJ ?= 0
+
+ifeq "$(MSECURITY_MODE)" "SECURE"
+# Tell the compiler we are building a secure project.  This is required to satisfy the requirements
+# defined in "Armv8-M Security Extension: Requirements on Developments Tools"
+# https://developer.arm.com/documentation/ecm0359818/latest
+PROJ_CFLAGS += -mcmse
+
+# Generate an object file with empty definitions of the secure image symbols at the correct locations.
+# The object file needs to be linked with the non-secure image.
+ifeq ($(GEN_CMSE_IMPLIB_OBJ),1)
+PROJ_LDFLAGS := -Xlinker --cmse-implib -Xlinker --out-implib=$(CURDIR)/build/build_s/secure_implib.o
+endif # GEN_CMSE_IMPLIB_OBJ
+endif # MSECUIRTY_MODE
+endif # TRUSTZONE
+endif # MCPU
 
 # Float ABI options:
 # See https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html (-mfloat-abi)
@@ -251,8 +377,23 @@ endif
 DEFAULT_OPTIMIZE_FLAGS ?= -ffunction-sections -fdata-sections -fsingle-precision-constant
 DEFAULT_WARNING_FLAGS ?= -Wall -Wno-format -Wdouble-promotion
 
+# The flags passed to the assembler.
+AFLAGS=-mthumb         \
+       -mcpu=$(MCPU) \
+       -MD
+ifneq "$(HEAP_SIZE)" ""
+AFLAGS+=-D__HEAP_SIZE=$(HEAP_SIZE)
+endif
+ifneq "$(STACK_SIZE)" ""
+AFLAGS+=-D__STACK_SIZE=$(STACK_SIZE)
+endif
+ifneq "$(SRAM_SIZE)" ""
+AFLAGS+=-D__SRAM_SIZE=$(SRAM_SIZE)
+endif
+AFLAGS+=$(PROJ_AFLAGS)
+
 CFLAGS=-mthumb                                                                 \
-       -mcpu=cortex-m4                                                         \
+       -mcpu=$(MCPU)                                                         \
        -mfloat-abi=$(MFLOAT_ABI)                                               \
        -mfpu=$(MFPU)                                                           \
        -Wa,-mimplicit-it=thumb                                                 \
@@ -264,10 +405,11 @@ CFLAGS=-mthumb                                                                 \
 
 # The flags passed to the C++ compiler.
 CXXFLAGS := $(CFLAGS)
+CXX_STANDARD?=17
 CXXFLAGS += \
 	-fno-rtti				\
 	-fno-exceptions				\
-	-std=c++11				\
+	-std=c++$(CXX_STANDARD)				
 
 # On GCC version > 4.8.0 use the -fno-isolate-erroneous-paths-dereference flag
 ifeq "$(GCCVERSIONGTEQ4)" "1"
@@ -276,6 +418,13 @@ endif
 
 ifneq "$(TARGET)" ""
 CFLAGS+=-DTARGET=$(TARGET)
+endif
+
+ifneq "$(TARGET_UC)" ""
+# Define a flag that the pre-processor can actually work with
+# (i.e. #ifdef MAX78000 ...)
+# TARGET_UC typically comes from the project core Makefile
+CFLAGS += -D$(TARGET_UC)
 endif
 
 ifneq "$(TARGET_REV)" ""
@@ -292,6 +441,11 @@ endif
 CFLAGS+=$(PROJ_CFLAGS)
 CXXFLAGS+=$(CFLAGS)
 
+C_WARNINGS_AS_ERRORS ?= implicit-function-declaration
+CFLAGS += -Werror=$(C_WARNINGS_AS_ERRORS)
+CFLAGS += -Wstrict-prototypes
+# ^ Add strict-prototypes after CXX_FLAGS so it's only added for C builds
+
 # The command for calling the library archiver.
 AR=${PREFIX}-ar
 
@@ -300,11 +454,36 @@ LD=${PREFIX}-gcc
 
 # The flags passed to the linker.
 LDFLAGS=-mthumb                                                                \
-        -mcpu=cortex-m4                                                        \
+        -mcpu=$(MCPU)                                                          \
         -mfloat-abi=$(MFLOAT_ABI)                                              \
         -mfpu=$(MFPU)                                                          \
         -Xlinker --gc-sections                                                 \
-	-Xlinker -Map -Xlinker ${BUILD_DIR}/$(PROJECT).map
+        -Xlinker -Map -Xlinker ${BUILD_DIR}/$(PROJECT).map                     \
+        -Xlinker --print-memory-usage
+
+# Add --no-warn-rwx-segments on GCC 12+
+# This is not universally supported or enabled by default, so we need to check whether the linker supports it first
+ARM_RWX_SEGMENTS_SUPPORTED ?=
+ifeq "$(ARM_RWX_SEGMENTS_SUPPORTED)" "" # -------------------------------------
+# Print the linker's help string and parse it for --no-warn-rwx-segments
+# Note we invoke the linker through the compiler "-Xlinker" because ld may not
+# be on the path, and that's how we invoke the linker for our implicit rules
+LINKER_OPTIONS := $(shell $(CC) -Xlinker --help)
+ifneq "$(findstring --no-warn-rwx-segments,$(LINKER_OPTIONS))" ""
+ARM_RWX_SEGMENTS_SUPPORTED := 1
+else
+ARM_RWX_SEGMENTS_SUPPORTED := 0
+endif
+
+# export the variable for sub-make calls, so we don't need to interact with the shell again (it's slow).
+export ARM_RWX_SEGMENTS_SUPPORTED
+endif # ------------------------------------------------------------------
+
+ifeq "$(ARM_RWX_SEGMENTS_SUPPORTED)" "1"
+LDFLAGS += -Xlinker --no-warn-rwx-segments
+endif
+
+# Add project-specific linker flags
 LDFLAGS+=$(PROJ_LDFLAGS)
 
 # Include math library
@@ -594,6 +773,28 @@ $(BUILD_DIR)/_empty_tmp_file.c: | $(BUILD_DIR)
 .PHONY: project_defines
 project_defines: $(BUILD_DIR)/project_defines.h
 
-$(BUILD_DIR)/project_defines.h: $(BUILD_DIR)/_empty_tmp_file.c | $(BUILD_DIR)
+$(BUILD_DIR)/project_defines.h: $(BUILD_DIR)/_empty_tmp_file.c $(PROJECTMK) | $(BUILD_DIR)
 	@echo "// This is a generated file that's used to detect definitions that have been set by the compiler and build system." > $@
 	@$(CC) -E -P -dD $(BUILD_DIR)/_empty_tmp_file.c $(filter-out -MD,$(CFLAGS)) >> $@
+
+################################################################################
+# Add a rule for querying the value of any Makefile variable.  This is useful for
+# IDEs when they need to figure out include paths, value of the target, etc. for a
+# project
+# Set QUERY_VAR to the variable to inspect.
+# The output must be parsed, since other Makefiles may print additional info strings.
+# The relevant content will be on its own line, and separated by an '=' character.
+# Ex: make query QUERY_VAR=TARGET
+# will return
+# TARGET=MAXxxxxx
+ifeq "$(MAKECMDGOALS)" "query"
+SUPPRESS_HELP := 1
+endif
+.PHONY: query
+query:
+	@echo
+ifneq "$(QUERY_VAR)" ""
+	$(foreach QUERY_VAR,$(QUERY_VAR),$(info $(QUERY_VAR)=$($(QUERY_VAR))))
+else
+	$(MAKE) debug
+endif

@@ -6,35 +6,22 @@
  */
 
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -63,7 +50,11 @@ extern "C" {
 #define __IO volatile
 #endif
 #ifndef __I
-#define __I  volatile const
+#ifdef __cplusplus
+#define __I volatile
+#else
+#define __I volatile const
+#endif
 #endif
 #ifndef __O
 #define __O  volatile
@@ -206,7 +197,6 @@ extern "C" {
 #define MXC_R_AFE_ADC_ONE_ADC_TRIM1        ((uint32_t)0x00F80002UL) /**< Offset from AFE_ADC_ONE Base Address: <tt> 0xF80002</tt> */
 #define MXC_R_AFE_ADC_ONE_ANA_TRIM         ((uint32_t)0x00F90002UL) /**< Offset from AFE_ADC_ONE Base Address: <tt> 0xF90002</tt> */
 #define MXC_R_AFE_ADC_ONE_SYS_CTRL         ((uint32_t)0x00FA0001UL) /**< Offset from AFE_ADC_ONE Base Address: <tt> 0xFA0001</tt> */
-#define MXC_R_AFE_ADC_ONE_TS_CTRL          ((uint32_t)0x00FC0001UL) /**< Offset from AFE_ADC_ONE Base Address: <tt> 0xFC0001</tt> */
 /**@} end of group afe_adc_one_registers */
 
 /**
@@ -365,20 +355,20 @@ extern "C" {
  */
 #define MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS             0 /**< CTRL_REF_SEL Position */
 #define MXC_F_AFE_ADC_ONE_CTRL_REF_SEL                 ((uint8_t)(0x7UL << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS)) /**< CTRL_REF_SEL Mask */
-#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N ((uint8_t)0x0UL) /**< CTRL_REF_SEL_REF0P_AND_REF0N Value */
-#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF0P_AND_REF0N Setting */
+#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AIN1N ((uint8_t)0x0UL) /**< CTRL_REF_SEL_AIN0P_AND_AIN1N Value */
+#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AIN1N (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AIN1N << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_AIN0P_AND_AIN1N Setting */
 #define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_REF1N ((uint8_t)0x1UL) /**< CTRL_REF_SEL_REF1P_AND_REF1N Value */
 #define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_REF1N (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_REF1N << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF1P_AND_REF1N Setting */
-#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_REF2N ((uint8_t)0x2UL) /**< CTRL_REF_SEL_REF2P_AND_REF2N Value */
-#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_REF2N (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_REF2N << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF2P_AND_REF2N Setting */
+#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N ((uint8_t)0x2UL) /**< CTRL_REF_SEL_REF0P_AND_REF0N Value */
+#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_REF0N << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF0P_AND_REF0N Setting */
 #define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AVDD_AND_AGND   ((uint8_t)0x3UL) /**< CTRL_REF_SEL_AVDD_AND_AGND Value */
 #define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_AVDD_AND_AGND   (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AVDD_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_AVDD_AND_AGND Setting */
-#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND  ((uint8_t)0x4UL) /**< CTRL_REF_SEL_REF0P_AND_AGND Value */
-#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND  (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF0P_AND_AGND Setting */
+#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AGND  ((uint8_t)0x4UL) /**< CTRL_REF_SEL_AIN0P_AND_AGND Value */
+#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AGND  (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_AIN0P_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_AIN0P_AND_AGND Setting */
 #define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_AGND  ((uint8_t)0x5UL) /**< CTRL_REF_SEL_REF1P_AND_AGND Value */
 #define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_AGND  (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF1P_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF1P_AND_AGND Setting */
-#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_AGND  ((uint8_t)0x6UL) /**< CTRL_REF_SEL_REF2P_AND_AGND Value */
-#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_AGND  (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF2P_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF2P_AND_AGND Setting */
+#define MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND  ((uint8_t)0x6UL) /**< CTRL_REF_SEL_REF0P_AND_AGND Value */
+#define MXC_S_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND  (MXC_V_AFE_ADC_ONE_CTRL_REF_SEL_REF0P_AND_AGND << MXC_F_AFE_ADC_ONE_CTRL_REF_SEL_POS) /**< CTRL_REF_SEL_REF0P_AND_AGND Setting */
 
 #define MXC_F_AFE_ADC_ONE_CTRL_REFBUFN_EN_POS          3 /**< CTRL_REFBUFN_EN Position */
 #define MXC_F_AFE_ADC_ONE_CTRL_REFBUFN_EN              ((uint8_t)(0x1UL << MXC_F_AFE_ADC_ONE_CTRL_REFBUFN_EN_POS)) /**< CTRL_REFBUFN_EN Mask */
@@ -576,7 +566,10 @@ extern "C" {
  * @{
  */
 #define MXC_F_AFE_ADC_ONE_PART_ID_REV_ID_POS           0 /**< PART_ID_REV_ID Position */
-#define MXC_F_AFE_ADC_ONE_PART_ID_REV_ID               ((uint32_t)(0x7UL << MXC_F_AFE_ADC_ONE_PART_ID_REV_ID_POS)) /**< PART_ID_REV_ID Mask */
+#define MXC_F_AFE_ADC_ONE_PART_ID_REV_ID               ((uint32_t)(0x1FUL << MXC_F_AFE_ADC_ONE_PART_ID_REV_ID_POS)) /**< PART_ID_REV_ID Mask */
+
+#define MXC_F_AFE_ADC_ONE_PART_ID_ADC_SEL_POS          5 /**< PART_ID_ADC_SEL Position */
+#define MXC_F_AFE_ADC_ONE_PART_ID_ADC_SEL              ((uint32_t)(0x1UL << MXC_F_AFE_ADC_ONE_PART_ID_ADC_SEL_POS)) /**< PART_ID_ADC_SEL Mask */
 
 /**@} end of group AFE_ADC_ONE_PART_ID_Register */
 
@@ -2036,23 +2029,6 @@ extern "C" {
 #define MXC_F_AFE_ADC_ONE_SYS_CTRL_CRC_INV             ((uint8_t)(0x1UL << MXC_F_AFE_ADC_ONE_SYS_CTRL_CRC_INV_POS)) /**< SYS_CTRL_CRC_INV Mask */
 
 /**@} end of group AFE_ADC_ONE_SYS_CTRL_Register */
-
-/**
- * @ingroup  afe_adc_one_registers
- * @defgroup AFE_ADC_ONE_TS_CTRL AFE_ADC_ONE_TS_CTRL
- * @brief    Temperature Sensor Control
- * @{
- */
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_EN_POS            0 /**< TS_CTRL_TS_EN Position */
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_EN                ((uint8_t)(0x1UL << MXC_F_AFE_ADC_ONE_TS_CTRL_TS_EN_POS)) /**< TS_CTRL_TS_EN Mask */
-
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_CONV_EN_POS       1 /**< TS_CTRL_TS_CONV_EN Position */
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_CONV_EN           ((uint8_t)(0x1UL << MXC_F_AFE_ADC_ONE_TS_CTRL_TS_CONV_EN_POS)) /**< TS_CTRL_TS_CONV_EN Mask */
-
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_INTG_RDY_POS      2 /**< TS_CTRL_TS_INTG_RDY Position */
-#define MXC_F_AFE_ADC_ONE_TS_CTRL_TS_INTG_RDY          ((uint8_t)(0x1UL << MXC_F_AFE_ADC_ONE_TS_CTRL_TS_INTG_RDY_POS)) /**< TS_CTRL_TS_INTG_RDY Mask */
-
-/**@} end of group AFE_ADC_ONE_TS_CTRL_Register */
 
 #ifdef __cplusplus
 }

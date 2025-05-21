@@ -1,5 +1,3 @@
-## Pull Request Template
-
 ### Description
 
 Please include a summary of the changes and related issues. Please also include relevant motivation and context.
@@ -10,6 +8,12 @@ Please include a summary of the changes and related issues. Please also include 
 - [ ] Description of changes and all other relevant information.
 - [ ] (Optional) Link any related GitHub issues [using a keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)
 - [ ] (Optional) Provide info on any relevant functional testing/validation.  For API changes or significant features, this is not optional.
+
+_______________________________________________________________________________
+
+> [!WARNING]
+> This is a template. Delete everything below the line when submitting a pull request.
+
 
 ### PR Title Guidelines
 
@@ -69,4 +73,4 @@ NOTE: The scope is case-sensitive and must match one of the listed scopes.
 
 #### More Info
 
-Please refer to the [CONTRIBUTING.md](https://github.com/Analog-Devices-MSDK/msdk/blob/main/Documentation/CONTRIBUTING.md) for more information regarding the PR Title.
+Please refer to the [CONTRIBUTING.md](https://github.com/analogdevicesinc/msdk/blob/main/Documentation/CONTRIBUTING.md) for more information regarding the PR Title.

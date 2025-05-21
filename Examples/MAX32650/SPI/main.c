@@ -1,40 +1,27 @@
 /**
  * @file    main.c
  * @brief   SPI Master Demo
- * @details Shows Master loopback demo for QSPI1
+ * @details Shows Master loopback demo for MAX32650
  *          Read the printf() for instructions
  */
 
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2025 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -69,8 +56,34 @@
 #define VALUE 0xFFFF
 #define SPI_SPEED 100000 // Bit Rate
 
+/* Default to SPI1 if not specified */
+#ifndef TEST_SPI_NUM
+#define TEST_SPI_NUM 1
+#endif
+
+#if TEST_SPI_NUM == 0
+#define SPI MXC_SPI0
+#define SPI_IRQ SPI0_IRQn
+#define SPI_MISO_STR "P3.1"
+#define SPI_MOSI_STR "P3.2"
+#elif TEST_SPI_NUM == 1
 #define SPI MXC_SPI1
 #define SPI_IRQ SPI1_IRQn
+#define SPI_MISO_STR "P1.28"
+#define SPI_MOSI_STR "P1.29"
+#elif TEST_SPI_NUM == 2
+#define SPI MXC_SPI2
+#define SPI_IRQ SPI2_IRQn
+#define SPI_MISO_STR "P2.3"
+#define SPI_MOSI_STR "P2.4"
+#elif TEST_SPI_NUM == 3
+#define SPI MXC_SPI3
+#define SPI_IRQ SPI3_IRQn
+#define SPI_MISO_STR "P0.20"
+#define SPI_MOSI_STR "P0.21"
+#else
+#error "Invalid SPI Instance specified!"
+#endif
 
 /***** Globals *****/
 uint16_t rx_data[DATA_LEN];
@@ -79,7 +92,7 @@ volatile int SPI_FLAG;
 volatile uint8_t DMA_FLAG = 0;
 
 /***** Functions *****/
-void SPI0_IRQHandler(void)
+void SPI_IRQHandler(void)
 {
     MXC_SPI_AsyncHandler(SPI);
 }
@@ -107,11 +120,11 @@ int main(void)
     mxc_spi_req_t req;
 
     printf("\n************** SPI Loopback Demo ****************\n");
-    printf("This example configures the SPI to send data between the MISO (P1.28) and\n");
-    printf("MOSI (P1.29) pins.  Connect these two pins together.  This demo shows SPI\n");
-    printf("sending different bit sizes each run through. If successful, the green LED will\n");
-    printf("illuminate.\n");
-
+    printf("This example configures the SPI to send data between the MISO (" SPI_MISO_STR
+           ") and\n");
+    printf("MOSI (" SPI_MOSI_STR ") pins.  Connect these two pins together.\n");
+    printf("This demo shows SPI sending different bit sizes each run through.\n"
+           "If successful, the green LED will illuminate.\n");
     printf("\nThis demo shows Asynchronous, Synchronous and DMA transaction for SPI1\n");
 
     for (i = 1; i < 17; i++) {
@@ -162,7 +175,7 @@ int main(void)
 #endif
 
 #if MASTERASYNC
-        MXC_NVIC_SetVector(SPI_IRQ, SPI0_IRQHandler);
+        MXC_NVIC_SetVector(SPI_IRQ, SPI_IRQHandler);
         NVIC_EnableIRQ(SPI_IRQ);
         MXC_SPI_MasterTransactionAsync(&req);
 

@@ -187,6 +187,15 @@ void PalBbBleDisable(void);
 /*************************************************************************************************/
 void PalBbBleSetChannelParam(PalBbBleChan_t *pChan);
 
+/*************************************************************************************************/
+/*!
+ *  \brief      Set channelization parameters.
+ *
+ *  \return     pChan
+ */
+/*************************************************************************************************/
+const PalBbBleChan_t* PalBbBleGetChannelParam(void);
+
 /*! \} */    /* PAL_BB_BLE_CHAN */
 
 /*! \addtogroup PAL_BB_BLE_DATA
@@ -341,6 +350,14 @@ void PalBbBleInlineEncryptSetPacketCount(uint64_t count);
 /*************************************************************************************************/
 void PalBbBleLowPower(void);
 
+/*************************************************************************************************/
+/*!
+ *  \brief      Refresh encryption keys.
+ *
+ *  \note       Needed after deep sleep.
+ */
+/*************************************************************************************************/
+void PalBbBleRefreshKeyAfterSleep(void);
 /*! \} */    /* PAL_BB_BLE */
 
 #ifdef __cplusplus

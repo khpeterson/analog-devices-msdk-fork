@@ -7,6 +7,8 @@
  *  Copyright (c) 2013-2019 Arm Ltd. All Rights Reserved.
  *
  *  Copyright (c) 2019-2020 Packetcraft, Inc.
+ *
+ *  Portions Copyright (c) 2024 Analog Devices, Inc.
  *  
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -255,6 +257,12 @@ extern "C" {
 #define LHCI_LEN_CMD_STATUS_EVT 0xFF
 
 /* Packetcraft vendor specific OCF range is 0x3C0-0x3FF */
+#define LHCI_OPCODE_VS_WRITE_FLASH\
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3C0) /*!< Write data to flash opcode. */
+#define LHCI_OPCODE_VS_PAGE_ERASE\
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3C1) /*!< MEMORY erase opcode. */
+#define LHCI_OPCODE_VS_DEVICE_RESET\
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3C2) /*!< Device system_reset opcode. */
 #define LHCI_OPCODE_VS_SET_SCAN_CH_MAP \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3E0) /*!< Set Scan Channel Map opcode. */
 #define LHCI_OPCODE_VS_SET_EVENT_MASK \
@@ -293,6 +301,8 @@ extern "C" {
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3F2) /*!< Set Local Feature opcode. */
 #define LHCI_OPCODE_VS_SET_OP_FLAGS \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3F3) /*!< Set Operational Flags opcode. */
+#define LHCI_OPCODE_VS_GET_PDU_FILT_STATS \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3F4) /*!< Get PDU Filter Statistics opcode. */
 #define LHCI_OPCODE_VS_SET_ADV_TX_PWR \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3F5) /*!< Set Advertising Tx Power opcode. */
 #define LHCI_OPCODE_VS_SET_CONN_TX_PWR \
@@ -307,8 +317,6 @@ extern "C" {
 #define LHCI_OPCODE_VS_SET_SNIFFER_ENABLE \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3CD) /*!< Enable sniffer packet forwarding. */
 
-#define LHCI_OPCODE_VS_GET_PDU_FILT_STATS \
-    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3F4) /*!< Get PDU Filter Statistics opcode. */
 #define LHCI_OPCODE_VS_GET_SYS_STATS \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3FA) /*!< Get Memory Statistics opcode. */
 #define LHCI_OPCODE_VS_GET_ADV_STATS \
@@ -354,16 +362,29 @@ extern "C" {
 #define LHCI_OPCODE_VS_SET_CONN_PHY_TX_PWR \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x3DD) /*!< Set Connection Phy Tx Power opcode. */
 
-#define LHCI_OPCODE_VS_REG_WRITE HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x300) /*!< Write register. */
-#define LHCI_OPCODE_VS_REG_READ HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x301) /*!< Read register. */
 #define LHCI_OPCODE_VS_RESET_CONN_STATS \
-    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x302) /*!< Reset connection stats. */
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x300) /*!< Reset connection stats. */
 #define LHCI_OPCODE_VS_TX_TEST \
-    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x303) /*!< Vendor specific TX test that takes numPkt param. */
-
-#define LHCI_OPCODE_VS_END_TEST     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, 0x301) /*!< Vendor specific TX test that takes numPkt param. */
+#define LHCI_OPCODE_VS_RESET_TEST_STATS     \
     HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
-               0x304) /*!<Vendor specific End Test Returning More than RX Packets*/
+               0x302) /*!<Vendor specific End Test Returning More than RX Packets*/
+#define LHCI_OPCODE_VS_RX_TEST     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
+               0x303) /*!<Vendor specific RX Test*/
+#define LHCI_OPCODE_VS_GET_RSSI     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
+               0x304) /*!<Vendor specific Get RSSI*/
+#define LHCI_OPCODE_VS_RESET_ADV_STATS     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
+               0x305) /*!<Vendor specific Reset Advertising Stats */
+#define LHCI_OPCODE_VS_RESET_SCAN_STATS     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
+               0x306) /*!<Vendor specific Reset Scan Stats */
+#define LHCI_OPCODE_VS_FGEN     \
+    HCI_OPCODE(HCI_OGF_VENDOR_SPEC, \
+               0x307) /*!<Vendor specific Function Generation */
+
 /* Vendor specific event masks. */
 #define LHCI_VS_EVT_MASK_SCAN_REPORT_EVT 0x01 /*!< (Byte 0) VS event bit, scan report. */
 #define LHCI_VS_EVT_MASK_DIAG_TRACE_EVT 0x02 /*!< (Byte 0) VS event bit, diagnostic tracing. */

@@ -4,35 +4,22 @@
  * @details    This driver can be used to operate on the embedded flash memory.
  */
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -43,6 +30,8 @@
 #include "mxc_sys.h"
 #include "flc_reva.h"
 #include "flc.h"
+
+// TODO(CM33): Check for secure vs non-secure accesses here.
 
 /**
  * @ingroup flc
@@ -145,6 +134,8 @@ int MXC_FLC_RevA_MassErase(mxc_flc_reva_regs_t *flc)
 
     /* Wait until flash operation is complete */
     while (MXC_busy_flc(flc)) {}
+    while ((flc->intr & MXC_F_FLC_REVA_INTR_DONE) == 0) {}
+    flc->intr &= ~MXC_F_FLC_REVA_INTR_DONE;
 
     /* Lock flash */
     flc->ctrl &= ~MXC_F_FLC_REVA_CTRL_UNLOCK;
@@ -181,6 +172,8 @@ int MXC_FLC_RevA_PageErase(mxc_flc_reva_regs_t *flc, uint32_t addr)
 
     /* Wait until flash operation is complete */
     while (MXC_busy_flc(flc)) {}
+    while ((flc->intr & MXC_F_FLC_REVA_INTR_DONE) == 0) {}
+    flc->intr &= ~MXC_F_FLC_REVA_INTR_DONE;
 
     /* Lock flash */
     flc->ctrl &= ~MXC_F_FLC_REVA_CTRL_UNLOCK;
@@ -234,6 +227,8 @@ int MXC_FLC_RevA_Write32(mxc_flc_reva_regs_t *flc, uint32_t logicAddr, uint32_t 
     /* Wait until flash operation is complete */
     while ((flc->ctrl & MXC_F_FLC_REVA_CTRL_PEND) != 0) {}
     while (MXC_busy_flc(flc)) {}
+    while ((flc->intr & MXC_F_FLC_REVA_INTR_DONE) == 0) {}
+    flc->intr &= ~MXC_F_FLC_REVA_INTR_DONE;
 
     /* Lock flash */
     flc->ctrl &= ~MXC_F_FLC_REVA_CTRL_UNLOCK;
@@ -336,6 +331,8 @@ int MXC_FLC_RevA_Write128(mxc_flc_reva_regs_t *flc, uint32_t addr, uint32_t *dat
     /* Wait until flash operation is complete */
     while ((flc->ctrl & MXC_F_FLC_REVA_CTRL_PEND) != 0) {}
     while (MXC_busy_flc(flc)) {}
+    while ((flc->intr & MXC_F_FLC_REVA_INTR_DONE) == 0) {}
+    flc->intr &= ~MXC_F_FLC_REVA_INTR_DONE;
 
     /* Lock flash */
     flc->ctrl &= ~MXC_F_FLC_REVA_CTRL_UNLOCK;
@@ -418,10 +415,13 @@ int MXC_FLC_RevA_ClearFlags(uint32_t mask)
 //******************************************************************************
 int MXC_FLC_RevA_UnlockInfoBlock(mxc_flc_reva_regs_t *flc, uint32_t address)
 {
+#if defined(CONFIG_TRUSTED_EXECUTION_SECURE) || (CONFIG_TRUSTED_EXECUTION_SECURE != 0) || \
+    (TARGET_NUM != 32657)
     if ((address < MXC_INFO_MEM_BASE) ||
         (address >= (MXC_INFO_MEM_BASE + (MXC_INFO_MEM_SIZE * 2)))) {
         return E_BAD_PARAM;
     }
+#endif
 
     /* Make sure the info block is locked */
     flc->actrl = 0x1234;
@@ -437,10 +437,13 @@ int MXC_FLC_RevA_UnlockInfoBlock(mxc_flc_reva_regs_t *flc, uint32_t address)
 //******************************************************************************
 int MXC_FLC_RevA_LockInfoBlock(mxc_flc_reva_regs_t *flc, uint32_t address)
 {
+#if defined(CONFIG_TRUSTED_EXECUTION_SECURE) || (CONFIG_TRUSTED_EXECUTION_SECURE != 0) || \
+    (TARGET_NUM != 32657)
     if ((address < MXC_INFO_MEM_BASE) ||
         (address >= (MXC_INFO_MEM_BASE + (MXC_INFO_MEM_SIZE * 2)))) {
         return E_BAD_PARAM;
     }
+#endif
 
     flc->actrl = 0xDEADBEEF;
     return E_NO_ERROR;

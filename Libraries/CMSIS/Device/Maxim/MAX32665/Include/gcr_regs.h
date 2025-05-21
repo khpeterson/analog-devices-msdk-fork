@@ -6,35 +6,22 @@
  */
 
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -63,7 +50,11 @@ extern "C" {
 #define __IO volatile
 #endif
 #ifndef __I
-#define __I  volatile const
+#ifdef __cplusplus
+#define __I volatile
+#else
+#define __I volatile const
+#endif
 #endif
 #ifndef __O
 #define __O  volatile
@@ -966,63 +957,63 @@ typedef struct {
  * @brief    BTLE LDO Control Register
  * @{
  */
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXEN_POS               0 /**< BTLE_LDOCR_LDOTXEN Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXEN                   ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXEN_POS)) /**< BTLE_LDOCR_LDOTXEN Mask */
-
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXOPULLD_POS           1 /**< BTLE_LDOCR_LDOTXOPULLD Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXOPULLD               ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXOPULLD_POS)) /**< BTLE_LDOCR_LDOTXOPULLD Mask */
-
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS             2 /**< BTLE_LDOCR_LDOTXVSEL Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL                 ((uint32_t)(0x3UL << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS)) /**< BTLE_LDOCR_LDOTXVSEL Mask */
-#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_7             ((uint32_t)0x0UL) /**< BTLE_LDOCR_LDOTXVSEL_0_7 Value */
-#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_0_7             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_7 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_0_7 Setting */
-#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_85            ((uint32_t)0x1UL) /**< BTLE_LDOCR_LDOTXVSEL_0_85 Value */
-#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_0_85            (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_85 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_0_85 Setting */
-#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_9             ((uint32_t)0x2UL) /**< BTLE_LDOCR_LDOTXVSEL_0_9 Value */
-#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_0_9             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_9 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_0_9 Setting */
-#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_1             ((uint32_t)0x3UL) /**< BTLE_LDOCR_LDOTXVSEL_1_1 Value */
-#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_1_1             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_1 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_1_1 Setting */
-
-#define MXC_F_GCR_BTLE_LDOCR_LDORXEN_POS               4 /**< BTLE_LDOCR_LDORXEN Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXEN_POS               0 /**< BTLE_LDOCR_LDORXEN Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDORXEN                   ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXEN_POS)) /**< BTLE_LDOCR_LDORXEN Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXPULLD_POS            5 /**< BTLE_LDOCR_LDORXPULLD Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDORXPULLD                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXPULLD_POS)) /**< BTLE_LDOCR_LDORXPULLD Mask */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXOPULLD_POS           1 /**< BTLE_LDOCR_LDORXOPULLD Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXOPULLD               ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXOPULLD_POS)) /**< BTLE_LDOCR_LDORXOPULLD Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS             6 /**< BTLE_LDOCR_LDORXVSEL Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS             2 /**< BTLE_LDOCR_LDORXVSEL Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDORXVSEL                 ((uint32_t)(0x3UL << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS)) /**< BTLE_LDOCR_LDORXVSEL Mask */
-#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_7             ((uint32_t)0x0UL) /**< BTLE_LDOCR_LDORXVSEL_0_7 Value */
-#define MXC_S_GCR_BTLE_LDOCR_LDORXVSEL_0_7             (MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_7 << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS) /**< BTLE_LDOCR_LDORXVSEL_0_7 Setting */
-#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_85            ((uint32_t)0x1UL) /**< BTLE_LDOCR_LDORXVSEL_0_85 Value */
+#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_85            ((uint32_t)0x0UL) /**< BTLE_LDOCR_LDORXVSEL_0_85 Value */
 #define MXC_S_GCR_BTLE_LDOCR_LDORXVSEL_0_85            (MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_85 << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS) /**< BTLE_LDOCR_LDORXVSEL_0_85 Setting */
-#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_9             ((uint32_t)0x2UL) /**< BTLE_LDOCR_LDORXVSEL_0_9 Value */
+#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_9             ((uint32_t)0x1UL) /**< BTLE_LDOCR_LDORXVSEL_0_9 Value */
 #define MXC_S_GCR_BTLE_LDOCR_LDORXVSEL_0_9             (MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_0_9 << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS) /**< BTLE_LDOCR_LDORXVSEL_0_9 Setting */
+#define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_1_0             ((uint32_t)0x2UL) /**< BTLE_LDOCR_LDORXVSEL_1_0 Value */
+#define MXC_S_GCR_BTLE_LDOCR_LDORXVSEL_1_0             (MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_1_0 << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS) /**< BTLE_LDOCR_LDORXVSEL_1_0 Setting */
 #define MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_1_1             ((uint32_t)0x3UL) /**< BTLE_LDOCR_LDORXVSEL_1_1 Value */
 #define MXC_S_GCR_BTLE_LDOCR_LDORXVSEL_1_1             (MXC_V_GCR_BTLE_LDOCR_LDORXVSEL_1_1 << MXC_F_GCR_BTLE_LDOCR_LDORXVSEL_POS) /**< BTLE_LDOCR_LDORXVSEL_1_1 Setting */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXBYP_POS              8 /**< BTLE_LDOCR_LDORXBYP Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDORXBYP                  ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXBYP_POS)) /**< BTLE_LDOCR_LDORXBYP Mask */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXEN_POS               4 /**< BTLE_LDOCR_LDOTXEN Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXEN                   ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXEN_POS)) /**< BTLE_LDOCR_LDOTXEN Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXDISCH_POS            9 /**< BTLE_LDOCR_LDORXDISCH Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDORXDISCH                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXDISCH_POS)) /**< BTLE_LDOCR_LDORXDISCH Mask */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXPULLD_POS            5 /**< BTLE_LDOCR_LDOTXPULLD Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXPULLD                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXPULLD_POS)) /**< BTLE_LDOCR_LDOTXPULLD Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXBYP_POS              10 /**< BTLE_LDOCR_LDOTXBYP Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS             6 /**< BTLE_LDOCR_LDOTXVSEL Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL                 ((uint32_t)(0x3UL << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS)) /**< BTLE_LDOCR_LDOTXVSEL Mask */
+#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_85            ((uint32_t)0x0UL) /**< BTLE_LDOCR_LDOTXVSEL_0_85 Value */
+#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_0_85            (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_85 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_0_85 Setting */
+#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_9             ((uint32_t)0x1UL) /**< BTLE_LDOCR_LDOTXVSEL_0_9 Value */
+#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_0_9             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_0_9 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_0_9 Setting */
+#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_0             ((uint32_t)0x2UL) /**< BTLE_LDOCR_LDOTXVSEL_1_0 Value */
+#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_1_0             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_0 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_1_0 Setting */
+#define MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_1             ((uint32_t)0x3UL) /**< BTLE_LDOCR_LDOTXVSEL_1_1 Value */
+#define MXC_S_GCR_BTLE_LDOCR_LDOTXVSEL_1_1             (MXC_V_GCR_BTLE_LDOCR_LDOTXVSEL_1_1 << MXC_F_GCR_BTLE_LDOCR_LDOTXVSEL_POS) /**< BTLE_LDOCR_LDOTXVSEL_1_1 Setting */
+
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXBYP_POS              8 /**< BTLE_LDOCR_LDOTXBYP Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDOTXBYP                  ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXBYP_POS)) /**< BTLE_LDOCR_LDOTXBYP Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXDISCH_POS            11 /**< BTLE_LDOCR_LDOTXDISCH Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXDISCH_POS            9 /**< BTLE_LDOCR_LDOTXDISCH Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDOTXDISCH                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXDISCH_POS)) /**< BTLE_LDOCR_LDOTXDISCH Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY_POS            12 /**< BTLE_LDOCR_LDOTXENDLY Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY_POS)) /**< BTLE_LDOCR_LDOTXENDLY Mask */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXBYP_POS              10 /**< BTLE_LDOCR_LDORXBYP Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXBYP                  ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXBYP_POS)) /**< BTLE_LDOCR_LDORXBYP Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXENDLY_POS            13 /**< BTLE_LDOCR_LDORXENDLY Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXDISCH_POS            11 /**< BTLE_LDOCR_LDORXDISCH Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXDISCH                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXDISCH_POS)) /**< BTLE_LDOCR_LDORXDISCH Mask */
+
+#define MXC_F_GCR_BTLE_LDOCR_LDORXENDLY_POS            12 /**< BTLE_LDOCR_LDORXENDLY Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDORXENDLY                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXENDLY_POS)) /**< BTLE_LDOCR_LDORXENDLY Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY_POS       14 /**< BTLE_LDOCR_LDORXBYPENENDLY Position */
-#define MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY           ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY_POS)) /**< BTLE_LDOCR_LDORXBYPENENDLY Mask */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY_POS            13 /**< BTLE_LDOCR_LDOTXENDLY Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY                ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXENDLY_POS)) /**< BTLE_LDOCR_LDOTXENDLY Mask */
 
-#define MXC_F_GCR_BTLE_LDOCR_LDOTXBYPENENDLY_POS       15 /**< BTLE_LDOCR_LDOTXBYPENENDLY Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDOTXBYPENENDLY_POS       14 /**< BTLE_LDOCR_LDOTXBYPENENDLY Position */
 #define MXC_F_GCR_BTLE_LDOCR_LDOTXBYPENENDLY           ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDOTXBYPENENDLY_POS)) /**< BTLE_LDOCR_LDOTXBYPENENDLY Mask */
+
+#define MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY_POS       15 /**< BTLE_LDOCR_LDORXBYPENENDLY Position */
+#define MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY           ((uint32_t)(0x1UL << MXC_F_GCR_BTLE_LDOCR_LDORXBYPENENDLY_POS)) /**< BTLE_LDOCR_LDORXBYPENENDLY Mask */
 
 /**@} end of group GCR_BTLE_LDOCR_Register */
 
@@ -1035,11 +1026,11 @@ typedef struct {
 #define MXC_F_GCR_BTLE_LDODCR_BYPDLYCNT_POS            0 /**< BTLE_LDODCR_BYPDLYCNT Position */
 #define MXC_F_GCR_BTLE_LDODCR_BYPDLYCNT                ((uint32_t)(0xFFUL << MXC_F_GCR_BTLE_LDODCR_BYPDLYCNT_POS)) /**< BTLE_LDODCR_BYPDLYCNT Mask */
 
-#define MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT_POS          8 /**< BTLE_LDODCR_LDORXDLYCNT Position */
-#define MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT              ((uint32_t)(0x1FFUL << MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT_POS)) /**< BTLE_LDODCR_LDORXDLYCNT Mask */
-
-#define MXC_F_GCR_BTLE_LDODCR_LDOTXDLYCNT_POS          20 /**< BTLE_LDODCR_LDOTXDLYCNT Position */
+#define MXC_F_GCR_BTLE_LDODCR_LDOTXDLYCNT_POS          8 /**< BTLE_LDODCR_LDOTXDLYCNT Position */
 #define MXC_F_GCR_BTLE_LDODCR_LDOTXDLYCNT              ((uint32_t)(0x1FFUL << MXC_F_GCR_BTLE_LDODCR_LDOTXDLYCNT_POS)) /**< BTLE_LDODCR_LDOTXDLYCNT Mask */
+
+#define MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT_POS          20 /**< BTLE_LDODCR_LDORXDLYCNT Position */
+#define MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT              ((uint32_t)(0x1FFUL << MXC_F_GCR_BTLE_LDODCR_LDORXDLYCNT_POS)) /**< BTLE_LDODCR_LDORXDLYCNT Mask */
 
 /**@} end of group GCR_BTLE_LDODCR_Register */
 

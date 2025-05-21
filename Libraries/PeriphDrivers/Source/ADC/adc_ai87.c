@@ -1,33 +1,20 @@
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2025 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -50,9 +37,9 @@
  */
 
 #define MXC_F_MCR_ADCCFG2_CH 0x3
-#define TEMP_FACTOR 530.582f / 4096.0
-#define TEMP_FACTOR1V25 1.25 * TEMP_FACTOR
-#define TEMP_FACTOR2V048 2.048 * TEMP_FACTOR
+#define TEMP_FACTOR 530.582f / 4096.0f
+#define TEMP_FACTOR1V25 1.25f * TEMP_FACTOR
+#define TEMP_FACTOR2V048 2.048f * TEMP_FACTOR
 
 static void initGPIOForChannel(mxc_adc_chsel_t channel)
 {
@@ -110,6 +97,7 @@ static void initGPIOforHWTrig(mxc_adc_trig_sel_t hwTrig)
         gpioCfg.func = MXC_GPIO_FUNC_ALT2;
         gpioCfg.pad = MXC_GPIO_PAD_NONE;
         gpioCfg.vssel = MXC_GPIO_VSSEL_VDDIOH;
+        gpioCfg.drvstr = MXC_GPIO_DRVSTR_0;
         MXC_GPIO_Config(&gpioCfg);
         break;
     case MXC_ADC_TRIG_SEL_P1_13:
@@ -118,6 +106,7 @@ static void initGPIOforHWTrig(mxc_adc_trig_sel_t hwTrig)
         gpioCfg.func = MXC_GPIO_FUNC_ALT2;
         gpioCfg.pad = MXC_GPIO_PAD_NONE;
         gpioCfg.vssel = MXC_GPIO_VSSEL_VDDIOH;
+        gpioCfg.drvstr = MXC_GPIO_DRVSTR_0;
         MXC_GPIO_Config(&gpioCfg);
         break;
     case MXC_ADC_TRIG_SEL_P1_14:
@@ -126,6 +115,7 @@ static void initGPIOforHWTrig(mxc_adc_trig_sel_t hwTrig)
         gpioCfg.func = MXC_GPIO_FUNC_ALT2;
         gpioCfg.pad = MXC_GPIO_PAD_NONE;
         gpioCfg.vssel = MXC_GPIO_VSSEL_VDDIOH;
+        gpioCfg.drvstr = MXC_GPIO_DRVSTR_0;
         MXC_GPIO_Config(&gpioCfg);
         break;
     }
@@ -357,7 +347,7 @@ int MXC_ADC_SlotConfiguration(mxc_adc_slot_req_t *req, uint32_t slot_length)
 {
     uint32_t loop_counter = 0;
 
-    for (loop_counter = 0; loop_counter <= slot_length; loop_counter++) {
+    for (loop_counter = 0; loop_counter < slot_length; loop_counter++) {
         initGPIOForChannel(req->channel);
 
         if (req->channel <= MAX_ADC_RES_DIV_CH) {
@@ -407,7 +397,7 @@ int MXC_ConvertTemperature_ToF(uint16_t tempSensor_Readout, mxc_adc_refsel_t ref
                                float *temp)
 {
     if (MXC_ConvertTemperature_ToK(tempSensor_Readout, ref, ext_ref, temp) == E_NO_ERROR) {
-        *temp = ((*temp * 1.8) - 459.67f);
+        *temp = (*temp * 1.8f) - 459.67f;
         return E_NO_ERROR;
     } else {
         return E_BAD_PARAM;

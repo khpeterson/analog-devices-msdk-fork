@@ -6,35 +6,22 @@
  */
 
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -63,7 +50,11 @@ extern "C" {
 #define __IO volatile
 #endif
 #ifndef __I
-#define __I  volatile const
+#ifdef __cplusplus
+#define __I volatile
+#else
+#define __I volatile const
+#endif
 #endif
 #ifndef __O
 #define __O  volatile
@@ -89,7 +80,11 @@ extern "C" {
 typedef struct {
     __I  uint32_t sistat;               /**< <tt>\b 0x00:</tt> SIR SISTAT Register */
     __I  uint32_t erraddr;              /**< <tt>\b 0x04:</tt> SIR ERRADDR Register */
-    __R  uint32_t rsv_0x8_0xff[62];
+    __R  uint32_t rsv_0x8_0x53[19];
+    __IO uint32_t btle_ldo_trim_tx;     /**< <tt>\b 0x54:</tt> SIR BTLE_LDO_TRIM_TX Register */
+    __R  uint32_t rsv_0x58;
+    __IO uint32_t btle_ldo_trim_rx;     /**< <tt>\b 0x5C:</tt> SIR BTLE_LDO_TRIM_RX Register */
+    __R  uint32_t rsv_0x60_0xff[40];
     __I  uint32_t fstat;                /**< <tt>\b 0x100:</tt> SIR FSTAT Register */
     __I  uint32_t sfstat;               /**< <tt>\b 0x104:</tt> SIR SFSTAT Register */
 } mxc_sir_regs_t;
@@ -103,6 +98,8 @@ typedef struct {
  */
 #define MXC_R_SIR_SISTAT                   ((uint32_t)0x00000000UL) /**< Offset from SIR Base Address: <tt> 0x0000</tt> */
 #define MXC_R_SIR_ERRADDR                  ((uint32_t)0x00000004UL) /**< Offset from SIR Base Address: <tt> 0x0004</tt> */
+#define MXC_R_SIR_BTLE_LDO_TRIM_TX         ((uint32_t)0x00000054UL) /**< Offset from SIR Base Address: <tt> 0x0054</tt> */
+#define MXC_R_SIR_BTLE_LDO_TRIM_RX         ((uint32_t)0x0000005CUL) /**< Offset from SIR Base Address: <tt> 0x005C</tt> */
 #define MXC_R_SIR_FSTAT                    ((uint32_t)0x00000100UL) /**< Offset from SIR Base Address: <tt> 0x0100</tt> */
 #define MXC_R_SIR_SFSTAT                   ((uint32_t)0x00000104UL) /**< Offset from SIR Base Address: <tt> 0x0104</tt> */
 /**@} end of group sir_registers */
@@ -133,6 +130,28 @@ typedef struct {
 #define MXC_F_SIR_ERRADDR_ERRADDR                      ((uint32_t)(0xFFFFFFFFUL << MXC_F_SIR_ERRADDR_ERRADDR_POS)) /**< ERRADDR_ERRADDR Mask */
 
 /**@} end of group SIR_ERRADDR_Register */
+
+/**
+ * @ingroup  sir_registers
+ * @defgroup SIR_BTLE_LDO_TRIM_TX SIR_BTLE_LDO_TRIM_TX
+ * @brief    BTLE LDO TX Trim register.
+ * @{
+ */
+#define MXC_F_SIR_BTLE_LDO_TRIM_TX_TX_POS              0 /**< BTLE_LDO_TRIM_TX_TX Position */
+#define MXC_F_SIR_BTLE_LDO_TRIM_TX_TX                  ((uint32_t)(0x1FUL << MXC_F_SIR_BTLE_LDO_TRIM_TX_TX_POS)) /**< BTLE_LDO_TRIM_TX_TX Mask */
+
+/**@} end of group SIR_BTLE_LDO_TRIM_TX_Register */
+
+/**
+ * @ingroup  sir_registers
+ * @defgroup SIR_BTLE_LDO_TRIM_RX SIR_BTLE_LDO_TRIM_RX
+ * @brief    BTLE LDO RX Trim register.
+ * @{
+ */
+#define MXC_F_SIR_BTLE_LDO_TRIM_RX_RX_POS              0 /**< BTLE_LDO_TRIM_RX_RX Position */
+#define MXC_F_SIR_BTLE_LDO_TRIM_RX_RX                  ((uint32_t)(0x1FUL << MXC_F_SIR_BTLE_LDO_TRIM_RX_RX_POS)) /**< BTLE_LDO_TRIM_RX_RX Mask */
+
+/**@} end of group SIR_BTLE_LDO_TRIM_RX_Register */
 
 /**
  * @ingroup  sir_registers

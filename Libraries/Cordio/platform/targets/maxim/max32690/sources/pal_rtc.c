@@ -14,6 +14,20 @@
  * Agreement do not use this file and delete all copies in your possession or control;
  * if you do not have a copy of the Agreement, you must contact Packetcraft, Inc. prior
  * to any use, copying or further distribution of this software.
+ *
+ * Copyright (c) 2022-2023 Analog Devices, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 /*************************************************************************************************/
 
@@ -28,7 +42,8 @@
 /**************************************************************************************************
   Macros
 **************************************************************************************************/
-
+#define PAL_WUT MXC_WUT0
+#define PAL_WUT_IRQn WUT0_IRQn
 /**************************************************************************************************
   Global Functions
 **************************************************************************************************/
@@ -47,26 +62,24 @@ static struct {
  *  \return None.
  */
 /*************************************************************************************************/
-__attribute__ ((weak)) void WUT0_IRQHandler(void)
+
+
+
+#if PAL_WUT_IRQn == WUT0_IRQn
+void WUT0_IRQHandler(void)
 {
   PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-#ifndef __riscv
-  MXC_WUT_IntClear();
-#endif
+  MXC_WUT_Handler(PAL_WUT);
 
-  NVIC_ClearPendingIRQ(WUT0_IRQn);
 }
-
-__attribute__ ((weak)) void WUT1_IRQHandler(void)
+#else
+void WUT1_IRQHandler(void)
 {
   PalLedOn(PAL_LED_ID_CPU_ACTIVE);
-#ifndef __riscv
-  MXC_WUT_IntClear();
-#endif
+  MXC_WUT_Handler(PAL_WUT);
 
-  NVIC_ClearPendingIRQ(WUT1_IRQn);
 }
-
+#endif
 /*************************************************************************************************/
 /*!
  *  \brief  Get the state of the RTC.
@@ -89,7 +102,7 @@ PalRtcState_t PalRtcGetState(void)
 /*************************************************************************************************/
 void PalRtcCompareSet(uint8_t channelId, uint32_t value)
 {
-  MXC_WUT_SetCompare(value);
+  MXC_WUT_SetCompare(PAL_WUT, value);
 }
 
 /*************************************************************************************************/
@@ -104,15 +117,15 @@ void PalRtcInit(void)
   cfg.mode = MXC_WUT_MODE_COMPARE;
   cfg.cmp_cnt = PAL_MAX_RTC_COUNTER_VAL;
 
-  MXC_WUT_Init(MXC_WUT_PRES_1);
-  MXC_WUT_Config(&cfg);
+  MXC_WUT_Init(PAL_WUT, MXC_WUT_PRES_1);
+  MXC_WUT_Config(PAL_WUT, &cfg);
   MXC_LP_EnableWUTAlarmWakeup();
 
-  NVIC_ClearPendingIRQ(WUT0_IRQn);
-  NVIC_EnableIRQ(WUT0_IRQn);
+  NVIC_ClearPendingIRQ(PAL_WUT_IRQn);
+  NVIC_EnableIRQ(PAL_WUT_IRQn);
 
   /* Enable WUT */
-  MXC_WUT_Enable();
+  MXC_WUT_Enable(PAL_WUT);
 
   palRtcCb.state = PAL_RTC_STATE_READY;
 }
@@ -129,7 +142,7 @@ void PalRtcInit(void)
 /*************************************************************************************************/
 uint32_t PalRtcCounterGet(void)
 {
-  uint32_t count = MXC_WUT_GetCount();
+  uint32_t count = MXC_WUT_GetCount(PAL_WUT);
 
   return count;
 }
@@ -143,7 +156,7 @@ uint32_t PalRtcCounterGet(void)
 /*************************************************************************************************/
 void PalRtcEnableCompareIrq(uint8_t channelId)
 {
-  NVIC_EnableIRQ(WUT0_IRQn);
+  NVIC_EnableIRQ(PAL_WUT_IRQn);
 }
 
 /*************************************************************************************************/
@@ -155,6 +168,6 @@ void PalRtcEnableCompareIrq(uint8_t channelId)
 /*************************************************************************************************/
 void PalRtcDisableCompareIrq(uint8_t channelId)
 {
-  MXC_WUT_IntClear();
-  NVIC_DisableIRQ(WUT0_IRQn);
+  MXC_WUT_ClearFlags(PAL_WUT);
+  NVIC_DisableIRQ(PAL_WUT_IRQn);
 }

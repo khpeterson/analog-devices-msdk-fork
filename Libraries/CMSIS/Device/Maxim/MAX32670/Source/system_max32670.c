@@ -1,33 +1,20 @@
 /******************************************************************************
- * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -45,9 +32,24 @@ extern void (*const __isr_vector[])(void);
 
 uint32_t SystemCoreClock = HIRC_FREQ;
 
+/*
+The libc implementation from GCC 11+ depends on _getpid and _kill in some places.
+There is no concept of processes/PIDs in the baremetal PeriphDrivers, therefore
+we implement stub functions that return an error code to resolve linker warnings.
+*/
+__weak int _getpid(void)
+{
+    return E_NOT_SUPPORTED;
+}
+
+__weak int _kill(void)
+{
+    return E_NOT_SUPPORTED;
+}
+
 __weak void SystemCoreClockUpdate(void)
 {
-    uint32_t base_freq, div, clk_src;
+    uint32_t base_freq, div, clk_src, ovr;
 
     // Get the clock source and frequency
     clk_src = (MXC_GCR->clkctrl & MXC_F_GCR_CLKCTRL_SYSCLK_SEL);
@@ -63,6 +65,14 @@ __weak void SystemCoreClockUpdate(void)
         break;
     case MXC_S_GCR_CLKCTRL_SYSCLK_SEL_IPO:
         base_freq = IPO_FREQ;
+
+        // Use output voltage range (OVR / VCORE) to adjust maximum IPO frequency
+        ovr = (MXC_PWRSEQ->lpcn & MXC_F_PWRSEQ_LPCN_OVR) >> MXC_F_PWRSEQ_LPCN_OVR_POS;
+        if (ovr == 0) { // 0.9 V
+            base_freq = 12000000;
+        } else if (ovr == 1) { // 1.0 V
+            base_freq = 50000000;
+        }
         break;
     case MXC_S_GCR_CLKCTRL_SYSCLK_SEL_IBRO:
         base_freq = IBRO_FREQ;
@@ -98,6 +108,23 @@ __weak int PreInit(void)
 {
     /* Do nothing */
     return 0;
+}
+
+/* This function is called before the Board_Init function.  This weak 
+ * implementation does nothing, but you may over-ride this function in your 
+ * program if you want to configure the state of all pins prior to the 
+ * application running.  This is useful when using external tools (like a
+ * Pin Mux configuration tool) that generate code to initialize the pins.
+ */
+__weak void PinInit(void)
+{
+    /* Do nothing */
+}
+
+__weak int PeripheralInit(void)
+{
+    /* Do nothing */
+    return E_NO_ERROR;
 }
 
 /* This function can be implemented by the application to initialize the board */
@@ -146,7 +173,13 @@ __weak void SystemInit(void)
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO0);
     MXC_SYS_ClockEnable(MXC_SYS_PERIPH_CLOCK_GPIO1);
 
+    PinInit();
     Board_Init();
+
+    /* Call peripheral init after board init to ensure the user's configuration
+     * is not overwritten    
+     */
+    PeripheralInit();
 }
 
 #if defined(__CC_ARM) || defined(__ARMCC_VERSION)

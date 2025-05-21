@@ -14,6 +14,20 @@
  * Agreement do not use this file and delete all copies in your possession or control;
  * if you do not have a copy of the Agreement, you must contact Packetcraft, Inc. prior
  * to any use, copying or further distribution of this software.
+ *
+ * Copyright (c) 2022-2023 Analog Devices, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 /*************************************************************************************************/
 
@@ -158,7 +172,7 @@ void palCfgLoadLlParams(uint8_t *pConfig)
   pCfg->cisSubEvtSpaceDelay   = 0;
   pCfg->maxBig                = 0;
   pCfg->maxBis                = 0;
-  pCfg->dtmRxSyncMs           = 1; /* effect PER */
+  pCfg->dtmRxSyncMs           = 10; /* effect PER */
 #endif
 }
 
@@ -171,8 +185,8 @@ void palCfgLoadLlParams(uint8_t *pConfig)
 /*************************************************************************************************/
 void palCfgLoadBdAddress(uint8_t *pDevAddr)
 {
-  uint8_t id[MXC_SYS_USN_CHECKSUM_LEN];
-  uint8_t checksum[MXC_SYS_USN_CHECKSUM_LEN];
+  uint8_t id[MXC_SYS_USN_LEN] = {0};
+  uint8_t checksum[MXC_SYS_USN_CHECKSUM_LEN] = {0};
 
   if(MXC_SYS_GetUSN(id, checksum) != E_NO_ERROR) {
     PalSysAssertTrap();	
@@ -183,7 +197,7 @@ void palCfgLoadBdAddress(uint8_t *pDevAddr)
   pDevAddr[4] = 0x18;
   pDevAddr[3] = 0x80;
 
-  pDevAddr[2] = checksum[2];
+  pDevAddr[2] = id[6] | id[7] | id[8];
   pDevAddr[1] = checksum[1];
   pDevAddr[0] = checksum[0];
 }

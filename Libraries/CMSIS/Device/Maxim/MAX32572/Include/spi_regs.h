@@ -2,43 +2,31 @@
  * @file    spi_regs.h
  * @brief   Registers, Bit Masks and Bit Positions for the SPI Peripheral Module.
  * @note    This file is @generated.
+ * @ingroup spi_registers
  */
 
 /******************************************************************************
- * Copyright (C) 2022 Maxim Integrated Products, Inc., All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Copyright (C) 2022-2023 Maxim Integrated Products, Inc. (now owned by 
+ * Analog Devices, Inc.),
+ * Copyright (C) 2023-2024 Analog Devices, Inc.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Except as contained in this notice, the name of Maxim Integrated
- * Products, Inc. shall not be used except as stated in the Maxim Integrated
- * Products, Inc. Branding Policy.
- *
- * The mere transfer of this software does not imply any licenses
- * of trade secrets, proprietary technology, copyrights, patents,
- * trademarks, maskwork rights, or any other form of intellectual
- * property whatsoever. Maxim Integrated Products, Inc. retains all
- * ownership rights.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
-#ifndef LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_SPI_REGS_H_
-#define LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_SPI_REGS_H_
+#ifndef LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_SPI_REGS_H_
+#define LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_SPI_REGS_H_
 
 /* **** Includes **** */
 #include <stdint.h>
@@ -62,7 +50,11 @@ extern "C" {
 #define __IO volatile
 #endif
 #ifndef __I
-#define __I  volatile const
+#ifdef __cplusplus
+#define __I volatile
+#else
+#define __I volatile const
+#endif
 #endif
 #ifndef __O
 #define __O  volatile
@@ -226,38 +218,8 @@ typedef struct {
 
 #define MXC_F_SPI_CTRL2_NUMBITS_POS                    8 /**< CTRL2_NUMBITS Position */
 #define MXC_F_SPI_CTRL2_NUMBITS                        ((uint32_t)(0xFUL << MXC_F_SPI_CTRL2_NUMBITS_POS)) /**< CTRL2_NUMBITS Mask */
-#define MXC_V_SPI_CTRL2_NUMBITS_16                     ((uint32_t)0x0UL) /**< CTRL2_NUMBITS_16 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_16                     (MXC_V_SPI_CTRL2_NUMBITS_16 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_16 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_1                      ((uint32_t)0x1UL) /**< CTRL2_NUMBITS_1 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_1                      (MXC_V_SPI_CTRL2_NUMBITS_1 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_1 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_2                      ((uint32_t)0x2UL) /**< CTRL2_NUMBITS_2 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_2                      (MXC_V_SPI_CTRL2_NUMBITS_2 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_2 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_3                      ((uint32_t)0x3UL) /**< CTRL2_NUMBITS_3 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_3                      (MXC_V_SPI_CTRL2_NUMBITS_3 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_3 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_4                      ((uint32_t)0x4UL) /**< CTRL2_NUMBITS_4 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_4                      (MXC_V_SPI_CTRL2_NUMBITS_4 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_4 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_5                      ((uint32_t)0x5UL) /**< CTRL2_NUMBITS_5 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_5                      (MXC_V_SPI_CTRL2_NUMBITS_5 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_5 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_6                      ((uint32_t)0x6UL) /**< CTRL2_NUMBITS_6 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_6                      (MXC_V_SPI_CTRL2_NUMBITS_6 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_6 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_7                      ((uint32_t)0x7UL) /**< CTRL2_NUMBITS_7 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_7                      (MXC_V_SPI_CTRL2_NUMBITS_7 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_7 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_8                      ((uint32_t)0x8UL) /**< CTRL2_NUMBITS_8 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_8                      (MXC_V_SPI_CTRL2_NUMBITS_8 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_8 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_9                      ((uint32_t)0x9UL) /**< CTRL2_NUMBITS_9 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_9                      (MXC_V_SPI_CTRL2_NUMBITS_9 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_9 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_10                     ((uint32_t)0xAUL) /**< CTRL2_NUMBITS_10 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_10                     (MXC_V_SPI_CTRL2_NUMBITS_10 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_10 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_11                     ((uint32_t)0xBUL) /**< CTRL2_NUMBITS_11 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_11                     (MXC_V_SPI_CTRL2_NUMBITS_11 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_11 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_12                     ((uint32_t)0xCUL) /**< CTRL2_NUMBITS_12 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_12                     (MXC_V_SPI_CTRL2_NUMBITS_12 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_12 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_13                     ((uint32_t)0xDUL) /**< CTRL2_NUMBITS_13 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_13                     (MXC_V_SPI_CTRL2_NUMBITS_13 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_13 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_14                     ((uint32_t)0xEUL) /**< CTRL2_NUMBITS_14 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_14                     (MXC_V_SPI_CTRL2_NUMBITS_14 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_14 Setting */
-#define MXC_V_SPI_CTRL2_NUMBITS_15                     ((uint32_t)0xFUL) /**< CTRL2_NUMBITS_15 Value */
-#define MXC_S_SPI_CTRL2_NUMBITS_15                     (MXC_V_SPI_CTRL2_NUMBITS_15 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_15 Setting */
+#define MXC_V_SPI_CTRL2_NUMBITS_0                      ((uint32_t)0x0UL) /**< CTRL2_NUMBITS_0 Value */
+#define MXC_S_SPI_CTRL2_NUMBITS_0                      (MXC_V_SPI_CTRL2_NUMBITS_0 << MXC_F_SPI_CTRL2_NUMBITS_POS) /**< CTRL2_NUMBITS_0 Setting */
 
 #define MXC_F_SPI_CTRL2_DATA_WIDTH_POS                 12 /**< CTRL2_DATA_WIDTH Position */
 #define MXC_F_SPI_CTRL2_DATA_WIDTH                     ((uint32_t)(0x3UL << MXC_F_SPI_CTRL2_DATA_WIDTH_POS)) /**< CTRL2_DATA_WIDTH Mask */
@@ -272,7 +234,7 @@ typedef struct {
 #define MXC_F_SPI_CTRL2_THREE_WIRE                     ((uint32_t)(0x1UL << MXC_F_SPI_CTRL2_THREE_WIRE_POS)) /**< CTRL2_THREE_WIRE Mask */
 
 #define MXC_F_SPI_CTRL2_SS_POL_POS                     16 /**< CTRL2_SS_POL Position */
-#define MXC_F_SPI_CTRL2_SS_POL                         ((uint32_t)(0xFUL << MXC_F_SPI_CTRL2_SS_POL_POS)) /**< CTRL2_SS_POL Mask */
+#define MXC_F_SPI_CTRL2_SS_POL                         ((uint32_t)(0xFFUL << MXC_F_SPI_CTRL2_SS_POL_POS)) /**< CTRL2_SS_POL Mask */
 #define MXC_V_SPI_CTRL2_SS_POL_SS0_HIGH                ((uint32_t)0x1UL) /**< CTRL2_SS_POL_SS0_HIGH Value */
 #define MXC_S_SPI_CTRL2_SS_POL_SS0_HIGH                (MXC_V_SPI_CTRL2_SS_POL_SS0_HIGH << MXC_F_SPI_CTRL2_SS_POL_POS) /**< CTRL2_SS_POL_SS0_HIGH Setting */
 #define MXC_V_SPI_CTRL2_SS_POL_SS1_HIGH                ((uint32_t)0x2UL) /**< CTRL2_SS_POL_SS1_HIGH Value */
@@ -516,4 +478,4 @@ typedef struct {
 }
 #endif
 
-#endif // LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32572_INCLUDE_SPI_REGS_H_
+#endif // LIBRARIES_CMSIS_DEVICE_MAXIM_MAX32672_INCLUDE_SPI_REGS_H_
