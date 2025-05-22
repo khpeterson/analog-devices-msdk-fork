@@ -51,6 +51,11 @@
 #include "trimsir_regs.h"
 #include "pal_btn.h"
 #include "tmr.h"
+#ifdef STRESS_TASK_NOTIFICATION
+#include <stdlib.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#endif
 
 /**************************************************************************************************
   Macros
@@ -65,6 +70,11 @@
 #endif /* BT_VER */
 
 #define TRIM_TIMER_EVT 0x99
+
+#ifdef STRESS_TASK_NOTIFICATION
+#define DUMMY_EVT 0x9A
+#define MAXDELAY 10000
+#endif
 
 #define TRIM_TIMER_PERIOD_MS 60000
 
@@ -210,6 +220,10 @@ static struct {
     wsfHandlerId_t handlerId; /* WSF handler ID */
     appDbHdl_t resListRestoreHdl; /*! Resolving List last restored handle */
     bool_t restoringResList; /*! Restoring resolving list from NVM */
+#ifdef STRESS_TASK_NOTIFICATION
+    dmConnId_t        connId;             /* Connection ID */
+    bool_t            connected;          /* Connection state */
+#endif
 } datsCb;
 
 /* LESC OOB configuration */
@@ -229,6 +243,25 @@ extern void setAdvTxPower(void);
  *  \return None.
  */
 /*************************************************************************************************/
+#ifdef STRESS_TASK_NOTIFICATION
+bool_t DatsSendData(uint8_t *data, uint16_t len)
+{
+	/* Make sure we're connected */
+	if(!datsCb.connected) {
+		return FALSE;
+	}
+    if (AttsCccEnabled(datsCb.connId, DATS_WP_DAT_CCC_IDX)) {
+        /* send notification */
+        AttsHandleValueNtf(datsCb.connId, WP_DAT_HDL, len, data);
+		return TRUE;
+    }
+	return FALSE;
+}
+
+bool_t DatsIsConnected(void) {
+	return datsCb.connected;
+}
+#else
 static void datsSendData(dmConnId_t connId)
 {
     uint8_t str[] = "hello back";
@@ -238,6 +271,7 @@ static void datsSendData(dmConnId_t connId)
         AttsHandleValueNtf(connId, WP_DAT_HDL, sizeof(str), str);
     }
 }
+#endif
 
 /*************************************************************************************************/
 /*!
@@ -363,7 +397,9 @@ uint8_t datsWpWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operation, 
         APP_TRACE_INFO0((const char *)pValue);
 
         /* send back some data */
+#ifndef STRESS_TASK_NOTIFICATION
         datsSendData(connId);
+#endif
     }
     return ATT_SUCCESS;
 }
@@ -539,10 +575,23 @@ static void datsProcMsg(dmEvt_t *pMsg)
         break;
 
     case DM_CONN_OPEN_IND:
+#ifdef STRESS_TASK_NOTIFICATION
+        datsCb.connId = (dmConnId_t) pMsg->hdr.param;
+        datsCb.connected = TRUE;
+#endif
         uiEvent = APP_UI_CONN_OPEN;
         break;
 
+#ifdef STRESS_TASK_NOTIFICATION
+    case DUMMY_EVT:
+        MXC_Delay(random() % MAXDELAY);
+        break;
+#endif
+
     case DM_CONN_CLOSE_IND:
+#ifdef STRESS_TASK_NOTIFICATION
+        datsCb.connected = FALSE;
+#endif		
         WsfTimerStop(&trimTimer);
 
         APP_TRACE_INFO2("Connection closed status 0x%x, reason 0x%x", pMsg->connClose.status,
@@ -863,7 +912,22 @@ static void btnPressHandler(uint8_t btnId, PalBtnPos_t state)
 void DatsHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
 {
     if (pMsg != NULL) {
+#ifdef STRESS_TASK_NOTIFICATION
+		static uint32_t event_count;
+		if ((event_count % 1000) == 0) {
+			static WsfBufPoolStat_t stat0, stat1, stat2, stat3, stat4;
+			WsfBufGetPoolStats(&stat0, 0);
+			WsfBufGetPoolStats(&stat1, 1);
+			WsfBufGetPoolStats(&stat2, 2);
+			WsfBufGetPoolStats(&stat3, 3);
+			WsfBufGetPoolStats(&stat4, 4);
+			APP_TRACE_INFO6("Dats got evt %d, event_count = %u, numAlloc = %d, %d, %d, %d", pMsg->event, event_count++, stat0.numAlloc, stat1.numAlloc, stat2.numAlloc, stat3.numAlloc);
+		} else {
+			APP_TRACE_INFO2("Dats got evt %d, event_count = %u", pMsg->event, event_count++);
+		}
+#else
         APP_TRACE_INFO1("Dats got evt %d", pMsg->event);
+#endif
 
         /* process ATT messages */
         if (pMsg->event >= ATT_CBACK_START && pMsg->event <= ATT_CBACK_END) {
@@ -882,6 +946,82 @@ void DatsHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
         datsProcMsg((dmEvt_t *)pMsg);
     }
 }
+
+#ifdef STRESS_TASK_NOTIFICATION
+
+uint8_t buffer[199];
+uint8_t bufval;
+
+#define SEND_PERIOD_TICKS (7812 * 4 / 1000)
+TickType_t last_send_tick;
+
+void fillBuffer(void) {
+	int i = 0;
+	while (i < sizeof(buffer)) {
+		buffer[i] = bufval;
+		bufval++;
+		i++;
+	}
+}
+
+void sendBlock(void) {
+	TickType_t now = xTaskGetTickCount();
+	if ((now - last_send_tick) < SEND_PERIOD_TICKS) {
+		return;
+	}
+	last_send_tick = now - (now % SEND_PERIOD_TICKS);
+	fillBuffer();
+	DatsSendData(buffer, sizeof(buffer));
+	return;
+}
+
+// Perform a periodic action
+static void runPeriodic( void * pvParameters )
+{
+	TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 1; // tick rate is 1KHz.
+	uint32_t loop_counter = 0;
+	uint32_t enabled_counter = 0;
+	bool_t enabled = FALSE;
+	bool_t started = FALSE;
+
+	// Initialise the xLastWakeTime variable with the current time.
+	xLastWakeTime = xTaskGetTickCount();
+
+	for( ;; ) {
+		// Wait for the next cycle.
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+		// manage enabled/disabled, start/stop
+		loop_counter++;
+		if (loop_counter % (configTICK_RATE_HZ / xFrequency) == 0) {
+			APP_TRACE_INFO1("%08d: tick", loop_counter);
+		}
+		if (!enabled && DatsIsConnected()) {
+			enabled_counter = loop_counter;
+			enabled = TRUE;
+			started = FALSE;
+		}
+		if (enabled && !started && ((loop_counter - enabled_counter) > 2000)) {
+			// ~ 2s hold off to let BLE settle
+			started = TRUE;
+		}
+		if (enabled && !DatsIsConnected()) {
+			enabled = FALSE;
+			started = FALSE;
+		}
+		if (started) {
+			sendBlock();
+			wsfMsgHdr_t *pMsg = WsfMsgAlloc(sizeof(wsfMsgHdr_t));
+			pMsg->param = datsCb.connId;
+			pMsg->event = DUMMY_EVT;
+			WsfMsgSend(datsCb.handlerId, pMsg);
+			MXC_Delay(random() % MAXDELAY);
+		}
+	}
+}
+
+#endif
 
 /*************************************************************************************************/
 /*!
@@ -924,4 +1064,12 @@ void DatsStart(void)
 
     /* Reset the device */
     DmDevReset();
+#ifdef STRESS_TASK_NOTIFICATION
+    xTaskCreate( runPeriodic,
+                 "RUN_PERIODIC",
+                 1024,
+                 NULL,
+                 configMAX_PRIORITIES - 3,
+                 NULL );
+#endif
 }

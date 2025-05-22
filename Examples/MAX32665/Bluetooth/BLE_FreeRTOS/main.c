@@ -55,6 +55,20 @@ extern void bleStartup(void);
  *
  * =======================================================
  */
+#ifdef STRESS_TASK_NOTIFICATION
+#include "mxc_delay.h"
+#include "wsf_trace.h"
+void vAssertCalled(const char *pcExpr, const char *const pcFileName, uint32_t ulLine)
+{
+    volatile uint32_t ulSetToNonZeroInDebuggerToContinue = 0;
+
+    APP_TRACE_ERR3("%s #%d: (%s)", pcFileName, ulLine, pcExpr);
+    // give trace some time to complete before disabling interrupts
+    MXC_Delay(100000);
+    LED_Off(1); // blue
+    LED_Off(2); // green
+    LED_On(0);  // red
+#else
 void vAssertCalled(const char *const pcFileName, uint32_t ulLine)
 {
     volatile uint32_t ulSetToNonZeroInDebuggerToContinue = 0;
@@ -63,6 +77,7 @@ void vAssertCalled(const char *const pcFileName, uint32_t ulLine)
     (void)ulLine;
     (void)pcFileName;
 
+#endif
     __asm volatile("cpsid i");
     {
         /* You can step out of this function to debug the assertion by using

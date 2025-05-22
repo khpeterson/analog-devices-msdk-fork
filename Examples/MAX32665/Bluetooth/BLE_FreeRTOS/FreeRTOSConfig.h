@@ -67,10 +67,18 @@ increase the amount of time spent in standby mode, thus reducing average power c
 #define configUSE_MUTEXES 1
 
 /* Define to trap errors during development. */
+#ifdef STRESS_TASK_NOTIFICATION
+void vAssertCalled(const char *pcExpr, const char *const pcFileName, uint32_t ulLine);
+#define configASSERT(x) \
+    if ((x) == 0) {                             \
+        vAssertCalled(#x, __FILE__, __LINE__);  \
+    }
+#else
 void vAssertCalled(const char *const pcFileName, uint32_t ulLine);
 #define configASSERT(x) \
     if ((x) == 0)       \
     vAssertCalled(__FILE__, __LINE__)
+#endif
 
 #define configUSE_TIMERS 1
 #define configTIMER_TASK_PRIORITY (configMAX_PRIORITIES - 3)

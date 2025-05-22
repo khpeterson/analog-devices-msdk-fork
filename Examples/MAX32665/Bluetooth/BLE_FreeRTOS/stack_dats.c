@@ -141,7 +141,11 @@ void StackInitDats(void)
     SmpHandlerInit(handlerId);
     SmprInit();
     SmprScInit();
+#ifdef STRESS_TASK_NOTIFICATION
+    HciSetMaxRxAclLen(256);
+#else
     HciSetMaxRxAclLen(100);
+#endif
 
     handlerId = WsfOsSetNextHandler(AppHandler);
     AppHandlerInit(handlerId);
@@ -167,8 +171,16 @@ static void mainWsfInit(void)
     const uint16_t aclBufSize = 12 + mainLlRtCfg.maxAclLen + 4 + BB_DATA_PDU_TAILROOM;
 
     /* Adjust buffer allocation based on platform configuration. */
+#ifdef STRESS_TASK_NOTIFICATION
+    // need a lot more 32-byte buffers to avoid overflowing to 271-byte buffers
+    mainPoolDesc[1].num = mainPoolDesc[1].num * 4;
+    // most tx bufs land in this pool
+    mainPoolDesc[2].len = maxRptBufSize;
+    mainPoolDesc[2].num = mainLlRtCfg.maxAdvReports > mainLlRtCfg.numTxBufs + mainLlRtCfg.numRxBufs ? mainLlRtCfg.maxAdvReports : mainLlRtCfg.numTxBufs + mainLlRtCfg.numRxBufs;
+#else
     mainPoolDesc[2].len = maxRptBufSize;
     mainPoolDesc[2].num = mainLlRtCfg.maxAdvReports;
+#endif	
     mainPoolDesc[3].len = aclBufSize;
     mainPoolDesc[3].num = mainLlRtCfg.numTxBufs + mainLlRtCfg.numRxBufs;
 #endif
