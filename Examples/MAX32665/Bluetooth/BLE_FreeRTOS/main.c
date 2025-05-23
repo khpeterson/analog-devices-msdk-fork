@@ -31,6 +31,10 @@
 #include "task.h"
 #include "semphr.h"
 #include "mxc_device.h"
+#ifdef STRESS_TASK_NOTIFICATION
+#include "mxc_delay.h"
+#include "wsf_trace.h"
+#endif
 #include "wut.h"
 #include "lp.h"
 #include "led.h"
@@ -56,8 +60,6 @@ extern void bleStartup(void);
  * =======================================================
  */
 #ifdef STRESS_TASK_NOTIFICATION
-#include "mxc_delay.h"
-#include "wsf_trace.h"
 void vAssertCalled(const char *pcExpr, const char *const pcFileName, uint32_t ulLine)
 {
     volatile uint32_t ulSetToNonZeroInDebuggerToContinue = 0;
