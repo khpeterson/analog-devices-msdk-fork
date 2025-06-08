@@ -34,6 +34,8 @@
         extern "C" {
     #endif
 
+    #include "trace.h"
+
 /*-----------------------------------------------------------
  * Port specific definitions.
  *
@@ -98,12 +100,24 @@
 /* Critical section management. */
     extern void vPortEnterCritical( void );
     extern void vPortExitCritical( void );
+    extern void vPortEnterCriticalFromNotCritical( void );
+    extern void vPortExitCriticalToNotCritical( void );
     #define portSET_INTERRUPT_MASK_FROM_ISR()         ulPortRaiseBASEPRI()
     #define portCLEAR_INTERRUPT_MASK_FROM_ISR( x )    vPortSetBASEPRI( x )
     #define portDISABLE_INTERRUPTS()                  vPortRaiseBASEPRI()
     #define portENABLE_INTERRUPTS()                   vPortSetBASEPRI( 0 )
-    #define portENTER_CRITICAL()                      vPortEnterCritical()
-    #define portEXIT_CRITICAL()                       vPortExitCritical()
+    //#define portENTER_CRITICAL()                      vPortEnterCritical()
+    #define portENTER_CRITICAL() \
+    do {                                                                \
+        vPortEnterCritical();                                           \
+        traceCRITICAL();                                                \
+    } while (0)
+    //#define portEXIT_CRITICAL()                       vPortExitCritical()
+    #define portEXIT_CRITICAL() \
+    do {                                                                \
+        traceCRITICAL();                                                \
+        vPortExitCritical();                                            \
+    } while (0)
 
 /*-----------------------------------------------------------*/
 

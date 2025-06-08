@@ -211,6 +211,7 @@ wsfHandlerId_t WsfOsSetNextHandler(wsfEventHandler_t handler)
 /*************************************************************************************************/
 void WsfOsInit(void)
 {
+  traceINIT();
   memset(&wsfOs, 0, sizeof(wsfOs));
   xTaskCreate(prvWSFMsgTask, /* The function that implements the task. */
               "CordioM", /* Text name for the task, just to help debugging. */

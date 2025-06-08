@@ -2889,6 +2889,7 @@ BaseType_t xTaskIncrementTick( void )
         }
         #endif
     }
+    traceTASK_INCREMENT_TICK_DONE( xTickCount );
 
     return xSwitchRequired;
 }
@@ -3013,6 +3014,7 @@ void vTaskSwitchContext( void )
         /* The scheduler is currently suspended - do not allow a context
          * switch. */
         xYieldPending = pdTRUE;
+        traceTASK_SCHEDULER_SUSPENDED();
     }
     else
     {
@@ -4772,9 +4774,13 @@ TickType_t uxTaskResetEventItemValue( void )
 
         taskENTER_CRITICAL();
         {
+            traceTASK_NOTIFY_WAIT_BLOCK_MAYBE1( uxIndexToWait );
+
             /* Only block if a notification is not already pending. */
             if( pxCurrentTCB->ucNotifyState[ uxIndexToWait ] != taskNOTIFICATION_RECEIVED )
             {
+                traceTASK_NOTIFY_WAIT_BLOCK_MAYBE2( uxIndexToWait );
+
                 /* Clear bits in the task's notification value as bits may get
                  * set  by the notifying task or interrupt.  This can be used to
                  * clear the value to zero. */
@@ -4805,8 +4811,10 @@ TickType_t uxTaskResetEventItemValue( void )
             }
         }
         taskEXIT_CRITICAL();
+        //vPortExitCriticalToNotCritical();
 
         taskENTER_CRITICAL();
+        //vPortEnterCriticalFromNotCritical();
         {
             traceTASK_NOTIFY_WAIT( uxIndexToWait );
 
@@ -4823,6 +4831,10 @@ TickType_t uxTaskResetEventItemValue( void )
              * unblocked because of a timeout. */
             if( pxCurrentTCB->ucNotifyState[ uxIndexToWait ] != taskNOTIFICATION_RECEIVED )
             {
+                traceTASK_NOTIFY_WAIT_NOT_NOTIFY( uxIndexToWait );
+                if (strcmp(pxCurrentTCB->pcTaskName, "CordioM") == 0) {
+                    configASSERT(FALSE);
+                }
                 /* A notification was not received. */
                 xReturn = pdFALSE;
             }

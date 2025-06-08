@@ -34,6 +34,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+unsigned long _trace_point_index;
+trace_point_t _trace_points[_NTRACE_POINTS];
+
 #ifndef __VFP_FP__
     #error This port can only be used when the project options are configured to enable hardware floating point support.
 #endif
@@ -148,6 +151,12 @@ static void prvTaskExitError( void );
 
 /* Each task maintains its own interrupt status in the critical nesting
  * variable. */
+/*
+   FIXME: uxCriticalNesting is initialized very late when the scheduler
+   is initialized.  But early call tree enters/exits critical section
+   long beforehand and consequently does not disable interrupts
+   when exiting critical section.
+*/
 static UBaseType_t uxCriticalNesting = 0xaaaaaaaa;
 
 /*
@@ -425,6 +434,21 @@ void vPortEnterCritical( void )
         configASSERT( ( portNVIC_INT_CTRL_REG & portVECTACTIVE_MASK ) == 0 );
     }
 }
+
+portFORCE_INLINE static void vPortAssertNotCritical( void ) {
+    uint32_t ulCurrMaskValue;
+    __asm volatile ("	nop					\n"
+                    "	mrs %0, basepri ":"=r" ( ulCurrMaskValue ) :: "memory");
+    configASSERT(ulCurrMaskValue == 0);
+}    
+
+void vPortEnterCriticalFromNotCritical( void )
+{
+    vPortAssertNotCritical();
+    portDISABLE_INTERRUPTS();
+    uxCriticalNesting++;
+    traceCRITICAL();
+}
 /*-----------------------------------------------------------*/
 
 void vPortExitCritical( void )
@@ -436,6 +460,21 @@ void vPortExitCritical( void )
     {
         portENABLE_INTERRUPTS();
     }
+}
+
+void vPortExitCriticalToNotCritical( void )
+{
+    traceCRITICAL();
+    configASSERT( uxCriticalNesting );
+    uxCriticalNesting--;
+
+    if( uxCriticalNesting == 0 )
+    {
+        //extern uint8_t wsfCsNesting;
+        //configASSERT(wsfCsNesting == 0);
+        portENABLE_INTERRUPTS();
+    }
+    vPortAssertNotCritical();
 }
 /*-----------------------------------------------------------*/
 

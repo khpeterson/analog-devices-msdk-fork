@@ -81,6 +81,7 @@ IPATH  = $(RTOS_CONFIG_DIR)
 IPATH += Source/portable/GCC/ARM_CM4F
 IPATH += .
 IPATH += Source/include
+IPATH += ../PeriphDrivers/include/$(TARGET_UC)
 
 # Include the rules for building for this target
 TARGET_UC := $(subst m,M,$(subst a,A,$(subst x,X,$(TARGET))))

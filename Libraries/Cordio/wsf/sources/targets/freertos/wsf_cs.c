@@ -42,10 +42,11 @@ uint8_t wsfCsNesting = 0;
  *  \brief  Enter a critical section.
  */
 /*************************************************************************************************/
+
 void WsfCsEnter(void)
 {
     portDISABLE_INTERRUPTS();
-
+    traceCRITICAL();
     wsfCsNesting++;
 }
 
@@ -57,6 +58,7 @@ void WsfCsEnter(void)
 void WsfCsExit(void)
 {
     wsfCsNesting--;
+    traceCRITICAL();
 
     if (wsfCsNesting == 0) {
         portENABLE_INTERRUPTS();
