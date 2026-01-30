@@ -221,6 +221,9 @@ typedef struct
       bool_t        abortSlvLatency;    /*!< If TRUE abort slave latency. */
 
       uint8_t       consCrcFailed;      /*!< Number of consecutive CRC failures. */
+#ifdef RSSI_HISTOGRAM
+      uint8_t       consRxErrors;       /*!< Number of consecutive Rx errors. */
+#endif
       bool_t        syncWithMaster;     /*!< Flag indicating synchronize packet received from master. */
       bool_t        rxFromMaster;       /*!< At least one successful packet received from master. */
       uint32_t      firstRxStartTsUsec; /*!< Timestamp of the first received frame regardless of CRC error in microseconds. */

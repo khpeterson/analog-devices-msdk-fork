@@ -276,6 +276,9 @@ void lctrSlvConnBuildOp(lctrConnCtx_t *pCtx)
 
   /* pCtx->lastChanIdx = 0; */              /* cleared in alloc */
   /* pCtx->eventCounter = 0; */             /* cleared in alloc */
+#ifdef RSSI_HISTOGRAM
+  pCtx->data.slv.consRxErrors = 0;
+#endif
   pCtx->data.slv.lastActiveEvent = 1;       /* guarantee execution of first connection event. */
 
   pCtx->usedChSel = pLctrConnMsg->connEstablish.usedChSel;

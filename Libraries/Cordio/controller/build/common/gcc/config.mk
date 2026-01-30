@@ -68,6 +68,9 @@ endif
 ifeq ($(INIT_ENCRYPTED),1)
 CFG_DEV         += INIT_ENCRYPTED
 endif
+ifeq ($(RSSI_HISTOGRAM),1)
+CFG_DEV			+= RSSI_HISTOGRAM=1
+endif
 
 # RTOS
 ifeq ($(DEBUG),0)

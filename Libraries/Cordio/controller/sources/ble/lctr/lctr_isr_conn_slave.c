@@ -37,6 +37,9 @@
 #include "util/bstream.h"
 #include "pal_bb.h"
 #include <string.h>
+#ifdef RSSI_HISTOGRAM
+#include "rssi_histogram.h"
+#endif
 
 /**************************************************************************************************
   Global Variables
@@ -688,6 +691,9 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
 
   /*** Connection event pre-processing ***/
 
+#ifdef RSSI_HISTOGRAM
+  int rssi = pConn->rssi;
+#endif
   if (lctrCheckForLinkTerm(pCtx) ||
       (status == BB_STATUS_FAILED) ||
       (status == BB_STATUS_RX_TIMEOUT))
@@ -695,6 +701,10 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
     if (status == BB_STATUS_RX_TIMEOUT)
     {
       LL_TRACE_WARN3("lctrSlvConnRxCompletion: BB failed with status=RX_TIMEOUT, handle=%u, bleChan=%u, eventCounter=%u", LCTR_GET_CONN_HANDLE(pCtx), pBle->chan.chanIdx, pCtx->eventCounter);
+#ifdef RSSI_HISTOGRAM
+      rssi_histogram_record_rx_timeout(rssi);
+      pCtx->data.slv.consRxErrors++;      
+#endif
     }
 
     if (status == BB_STATUS_FAILED)
@@ -725,6 +735,11 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
 
     /* Reset consecutive CRC failure counter. */
     pCtx->data.slv.consCrcFailed = 0;
+#ifdef RSSI_HISTOGRAM
+    rssi_histogram_record_success(rssi);
+    rssi_histogram_record_error_burst(pCtx->data.slv.consRxErrors);
+    pCtx->data.slv.consRxErrors = 0;
+#endif
 
     if(decremented) {
       /* Reset the packet counter */
@@ -738,6 +753,10 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
     if(status == BB_STATUS_CRC_FAILED) {
       LL_TRACE_WARN3("lctrSlvConnRxCompletion: BB failed with status=CRC_FAILED, handle=%u, bleChan=%u, eventCounter=%u", LCTR_GET_CONN_HANDLE(pCtx), pBle->chan.chanIdx, pCtx->eventCounter);
       pCtx->data.slv.consCrcFailed++;
+#ifdef RSSI_HISTOGRAM
+      rssi_histogram_record_crc_error(rssi);
+      pCtx->data.slv.consRxErrors++;
+#endif
     } else {
       /* Decryption failure */
       LL_TRACE_WARN3("lctrSlvConnRxCompletion: BB failed with status=BB_STATUS_FRAME_FAILED, handle=%u, rxPktCounter=%u, eventCounter=%u", LCTR_GET_CONN_HANDLE(pCtx), pCtx->rxPktCounter, pCtx->eventCounter);

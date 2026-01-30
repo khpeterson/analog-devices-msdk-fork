@@ -30,6 +30,9 @@
 #include "sch_api_ble.h"
 #include "wsf_assert.h"
 #include "wsf_trace.h"
+#ifdef RSSI_HISTOGRAM
+#include "rssi_histogram.h"
+#endif
 
 /*************************************************************************************************/
 /*!
@@ -231,6 +234,9 @@ void lctrConnStatelessEventHandler(lctrConnCtx_t *pCtx, uint8_t event)
 
       lctrNotifyHostDisconnectInd(pCtx);
       lctrFreeConnCtx(pCtx);
+#ifdef RSSI_HISTOGRAM
+      rssi_histogram_report();
+#endif
       break;
     case LCTR_CONN_TERM_SUP_TIMEOUT:
       LL_TRACE_WARN2("lctrConnStatelessEventHandler: handle=%u, state=%u, event=SUP_TIMEOUT", LCTR_GET_CONN_HANDLE(pCtx), pCtx->state);

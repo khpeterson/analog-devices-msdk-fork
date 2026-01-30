@@ -284,3 +284,8 @@ C_FILES += \
 	$(ROOT_DIR)/controller/sources/ble/ll/ll_main_bis_master.c \
 	$(ROOT_DIR)/controller/sources/ble/ll/ll_main_bis_slave.c 
 endif
+
+ifeq ($(RSSI_HISTOGRAM), 1)
+C_FILES += \
+	$(ROOT_DIR)/controller/sources/ble/lctr/rssi_histogram.c
+endif
