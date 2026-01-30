@@ -53,15 +53,17 @@ void rssi_histogram_record_error_burst(uint8_t burst_length);
  * @brief Report histogram data (minimal format for post-processing)
  *
  * Call this after each connection TERMINATE event.
- * Output format (three lines):
+ * Output format (four lines):
  *   RSSI_OK_HIST: total,bin0,bin1,...,bin6
  *   RSSI_CRC_HIST: total,bin0,bin1,...,bin6
+ *   RSSI_TIMEOUT_HIST: total,bin0,bin1,...,bin6
  *   ERROR_BURST_HIST: total,bin1,bin2,...,bin10plus
  *
  * Example output:
- *   RSSI_OK_HIST: 222171,695,14926,20364,56964,109386,19381,432
- *   RSSI_CRC_HIST: 77805,282,36231,33399,2671,3265,1230,726
- *   ERROR_BURST_HIST: 75523,46161,20287,6177,1925,636,222,84,24,6,2
+ *   RSSI_OK_HIST: 184613,403,2313,11923,36950,66209,66751,64
+ *   RSSI_CRC_HIST: 51715,1796,6247,12163,5873,6975,18572,89
+ *   RSSI_TIMEOUT_HIST: 35286,0,0,0,0,0,0,35286
+ *   ERROR_BURST_HIST: 58584,39634,12591,4253,1449,435,146,49,16,6,5
  */
 void rssi_histogram_report(void);
 
