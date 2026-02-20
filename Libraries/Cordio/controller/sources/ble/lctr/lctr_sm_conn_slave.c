@@ -30,8 +30,8 @@
 #include "sch_api_ble.h"
 #include "wsf_assert.h"
 #include "wsf_trace.h"
-#ifdef RSSI_HISTOGRAM
-#include "rssi_histogram.h"
+#ifdef LCTR_HIST
+#include "lctr_hist.h"
 #endif
 
 /*************************************************************************************************/
@@ -234,8 +234,8 @@ void lctrConnStatelessEventHandler(lctrConnCtx_t *pCtx, uint8_t event)
 
       lctrNotifyHostDisconnectInd(pCtx);
       lctrFreeConnCtx(pCtx);
-#ifdef RSSI_HISTOGRAM
-      rssi_histogram_report();
+#ifdef LCTR_HIST
+      lctrHistReport();
 #endif
       break;
     case LCTR_CONN_TERM_SUP_TIMEOUT:

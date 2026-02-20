@@ -37,8 +37,8 @@
 #include "util/bstream.h"
 #include "pal_bb.h"
 #include <string.h>
-#ifdef RSSI_HISTOGRAM
-#include "rssi_histogram.h"
+#ifdef LCTR_HIST
+#include "lctr_hist.h"
 #endif
 
 /**************************************************************************************************
@@ -701,9 +701,9 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
     if (status == BB_STATUS_RX_TIMEOUT)
     {
       LL_TRACE_WARN3("lctrSlvConnRxCompletion: BB failed with status=RX_TIMEOUT, handle=%u, bleChan=%u, eventCounter=%u", LCTR_GET_CONN_HANDLE(pCtx), pBle->chan.chanIdx, pCtx->eventCounter);
-#ifdef RSSI_HISTOGRAM
-      rssi_histogram_record_rx_timeout(rssi);
-      pCtx->data.slv.consRxErrors++;      
+#ifdef LCTR_HIST
+      lctrHistRecordRxTimeout(rssi);
+      pCtx->data.slv.consRxErrors++;
 #endif
     }
 
@@ -735,9 +735,9 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
 
     /* Reset consecutive CRC failure counter. */
     pCtx->data.slv.consCrcFailed = 0;
-#ifdef RSSI_HISTOGRAM
-    rssi_histogram_record_success(rssi);
-    rssi_histogram_record_error_burst(pCtx->data.slv.consRxErrors);
+#ifdef LCTR_HIST
+    lctrHistRecordSuccess(rssi);
+    lctrHistRecordErrorBurst(pCtx->data.slv.consRxErrors);
     pCtx->data.slv.consRxErrors = 0;
 #endif
 
@@ -753,8 +753,8 @@ void lctrSlvConnRxCompletion(BbOpDesc_t *pOp, uint8_t *pRxBuf, uint8_t status)
     if(status == BB_STATUS_CRC_FAILED) {
       LL_TRACE_WARN3("lctrSlvConnRxCompletion: BB failed with status=CRC_FAILED, handle=%u, bleChan=%u, eventCounter=%u", LCTR_GET_CONN_HANDLE(pCtx), pBle->chan.chanIdx, pCtx->eventCounter);
       pCtx->data.slv.consCrcFailed++;
-#ifdef RSSI_HISTOGRAM
-      rssi_histogram_record_crc_error(rssi);
+#ifdef LCTR_HIST
+      lctrHistRecordCrcError(rssi);
       pCtx->data.slv.consRxErrors++;
 #endif
     } else {

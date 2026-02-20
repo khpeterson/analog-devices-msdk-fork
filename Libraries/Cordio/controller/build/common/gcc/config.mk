@@ -68,8 +68,8 @@ endif
 ifeq ($(INIT_ENCRYPTED),1)
 CFG_DEV         += INIT_ENCRYPTED
 endif
-ifeq ($(RSSI_HISTOGRAM),1)
-CFG_DEV			+= RSSI_HISTOGRAM=1
+ifeq ($(LCTR_HIST),1)
+CFG_DEV			+= LCTR_HIST=1
 endif
 
 # RTOS

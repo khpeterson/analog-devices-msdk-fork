@@ -221,7 +221,7 @@ typedef struct
       bool_t        abortSlvLatency;    /*!< If TRUE abort slave latency. */
 
       uint8_t       consCrcFailed;      /*!< Number of consecutive CRC failures. */
-#ifdef RSSI_HISTOGRAM
+#ifdef LCTR_HIST
       uint8_t       consRxErrors;       /*!< Number of consecutive Rx errors. */
 #endif
       bool_t        syncWithMaster;     /*!< Flag indicating synchronize packet received from master. */
