@@ -235,6 +235,8 @@ void lctrConnStatelessEventHandler(lctrConnCtx_t *pCtx, uint8_t event)
       lctrNotifyHostDisconnectInd(pCtx);
       lctrFreeConnCtx(pCtx);
 #ifdef LCTR_HIST
+      lctrHistRecordErrorBurst(pCtx->data.slv.consRxErrors);
+      pCtx->data.slv.consRxErrors = 0;
       lctrHistReport();
 #endif
       break;
