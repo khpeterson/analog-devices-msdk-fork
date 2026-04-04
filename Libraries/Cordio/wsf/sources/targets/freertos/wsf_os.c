@@ -160,8 +160,8 @@ void WsfTaskSetReady(wsfHandlerId_t handlerId, wsfTaskEvent_t event)
   /* Issue #1497: prevent unexpected task preemption by deferring
    * notification of msg task from hnd task until handler is done
    */
-  if ((event == WSF_MSG_QUEUE_EVENT) &&
-      (xTaskGetCurrentTaskHandle() == wsfOs.task.hndTaskHandle)) {
+  TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+  if ((event == WSF_MSG_QUEUE_EVENT) && (currentTaskHandle == wsfOs.task.hndTaskHandle)) {
     WSF_TRACE_INFO0("WsfTaskSetReady: deferring msg task notify");
     return;
   }
