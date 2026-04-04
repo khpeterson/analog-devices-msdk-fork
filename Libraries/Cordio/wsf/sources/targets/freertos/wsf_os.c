@@ -156,6 +156,17 @@ void WsfTaskSetReady(wsfHandlerId_t handlerId, wsfTaskEvent_t event)
   /* Unused parameter */
   (void)handlerId;
 
+#if WSF_DISPATCHER_MSG_TASK_PRIORITY > WSF_DISPATCHER_HND_TASK_PRIORITY
+  /* Issue #1497: prevent unexpected task preemption by deferring
+   * notification of msg task from hnd task until handler is done
+   */
+  if ((event == WSF_MSG_QUEUE_EVENT) &&
+      (xTaskGetCurrentTaskHandle() == wsfOs.task.hndTaskHandle)) {
+    WSF_TRACE_INFO0("WsfTaskSetReady: deferring msg task notify");
+    return;
+  }
+#endif
+
   /* Notify the dispatcher task */
   if (xPortIsInsideInterrupt()) {
     xTaskNotifyFromISR(wsfOs.task.msgTaskHandle, event, eSetBits, NULL);
@@ -308,6 +319,15 @@ static void prvWSFHndTask(void *pvParameters)
           /* Read the event mask and clear it atomically */
           __atomic_exchange(&pTask->handlerEventMask[i], &zero, &eventMask, __ATOMIC_ACQ_REL);
           (*pTask->handler[i])(eventMask, NULL);
+
+#if WSF_DISPATCHER_MSG_TASK_PRIORITY > WSF_DISPATCHER_HND_TASK_PRIORITY
+          /* trigger deferred messages now that handler is done */
+          wsfHandlerId_t handlerId;
+          if (WsfMsgPeek(&pTask->msgQueue, &handlerId) != NULL) {
+            WSF_TRACE_INFO0("prvWSFHndTask: msg task notify was deferred, notifying now");
+            xTaskNotify(wsfOs.task.msgTaskHandle, WSF_MSG_QUEUE_EVENT, eSetBits);
+          }
+#endif
         }
       }
     }
