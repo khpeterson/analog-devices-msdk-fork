@@ -150,7 +150,7 @@ static void wsfTimerInsert(wsfTimer_t *pTimer, wsfTimerTicks_t ticks)
 
 /*************************************************************************************************/
 /*!
- *  \brief  Timer tick task. Runs at highest task priority; vTaskDelayUntil correctly
+ *  \brief  Timer tick task, runs at highest task priority; vTaskDelayUntil correctly
  *.         accounts for tickless idle.
  */
 /*************************************************************************************************/
@@ -163,8 +163,6 @@ static void prvWSFTimerTickTask(void *pvParameters) {
   }
 }
 
-static TaskHandle_t tmrTaskHandle;
-
 /*************************************************************************************************/
 /*!
  *  \brief  Initialize the timer service.  This function should only be called once
@@ -173,6 +171,7 @@ static TaskHandle_t tmrTaskHandle;
 /*************************************************************************************************/
 void WsfTimerInit(void)
 {
+  TaskHandle_t tmrTaskHandle = NULL;
   WSF_QUEUE_INIT(&wsfTimerTimerQueue);
   xTaskCreate(prvWSFTimerTickTask, /* The function that implements the task. */
               "CordioT", /* Text name for the task, just to help debugging. */
