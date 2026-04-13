@@ -46,6 +46,7 @@
 #define MAX_WUT_TICKS (configRTC_TICK_RATE_HZ) /* Maximum deep sleep time, units of 32 kHz ticks */
 #define MIN_WUT_TICKS 100 /* Minimum deep sleep time, units of 32 kHz ticks */
 #define WAKEUP_US 1500 /* Deep sleep recovery time, units of us */
+#define SCH_HANDLER_LATENCY_US 300 /* Latency from pal timer start to schLoadBod execution */
 
 /* Minimum ticks before SysTick interrupt, units of system clock ticks.
  * Convert CPU_CLOCK_HZ to units of ticks per us 
@@ -318,7 +319,7 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
             schUsecElapsed =
                 (uint64_t)dsWutTicks * (uint64_t)1000000 / (uint64_t)configRTC_TICK_RATE_HZ;
 
-            int palTimerStartTicks = schUsec - schUsecElapsed;
+            int palTimerStartTicks = schUsec - schUsecElapsed - SCH_HANDLER_LATENCY_US;
             if (palTimerStartTicks < 1) {
                 palTimerStartTicks = 1;
             }
