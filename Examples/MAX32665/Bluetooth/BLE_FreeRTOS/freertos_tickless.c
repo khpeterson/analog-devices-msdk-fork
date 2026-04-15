@@ -46,7 +46,8 @@
 #define MAX_WUT_TICKS (configRTC_TICK_RATE_HZ) /* Maximum deep sleep time, units of 32 kHz ticks */
 #define MIN_WUT_TICKS 100 /* Minimum deep sleep time, units of 32 kHz ticks */
 #define WAKEUP_US 1500 /* Deep sleep recovery time, units of us */
-#define SCH_HANDLER_LATENCY_US 300 /* Latency from pal timer start to schLoadBod execution */
+#define WAKEUP_TICKS (WAKEUP_US * configRTC_TICK_RATE_HZ / 1000000)
+#define SCH_HANDLER_LATENCY_US 220 /* Latency from PalTimerStart() to schDueTimeInFuture() */
 
 /* Minimum ticks before SysTick interrupt, units of system clock ticks.
  * Convert CPU_CLOCK_HZ to units of ticks per us 
@@ -199,7 +200,7 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
     }
 
     /* Check to see if we meet the minimum requirements for deep sleep */
-    if (idleTicks < (MIN_WUT_TICKS + WAKEUP_US)) {
+    if (idleTicks < (MIN_WUT_TICKS + WAKEUP_TICKS)) {
         return;
     }
 
@@ -256,14 +257,14 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
         schUsec = PalTimerGetExpTime();
 
         /* Adjust idleTicks for the time it takes to restart the BLE hardware */
-        idleTicks -= ((WAKEUP_US)*configRTC_TICK_RATE_HZ / 1000000);
+        idleTicks -= WAKEUP_TICKS;
 
         /* Calculate the time to the next BLE scheduler event */
         if (schUsec < WAKEUP_US) {
             bleSleepTicks = 0;
         } else {
             bleSleepTicks = ((uint64_t)schUsec - (uint64_t)WAKEUP_US) *
-                            (uint64_t)configRTC_TICK_RATE_HZ / (uint64_t)BB_CLK_RATE_HZ;
+                            (uint64_t)configRTC_TICK_RATE_HZ / (uint64_t)1000000;
         }
     } else {
         /* Snapshot the current WUT value */
