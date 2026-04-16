@@ -47,7 +47,6 @@
 #define MIN_WUT_TICKS 100 /* Minimum deep sleep time, units of 32 kHz ticks */
 #define WAKEUP_US 1500 /* Deep sleep recovery time, units of us */
 #define WAKEUP_TICKS (WAKEUP_US * configRTC_TICK_RATE_HZ / 1000000)
-#define SCH_HANDLER_LATENCY_US 220 /* Latency from PalTimerStart() to schDueTimeInFuture() */
 
 /* Minimum ticks before SysTick interrupt, units of system clock ticks.
  * Convert CPU_CLOCK_HZ to units of ticks per us 
@@ -177,10 +176,11 @@ static void deepSleep(void)
  * interrupt the WFI and continue execution.
  *
  */
+
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
 {
     uint32_t preCapture, postCapture, schUsec, dsTicks, dsWutTicks;
-    uint64_t bleSleepTicks, idleTicks, dsSysTickPeriods, schUsecElapsed;
+    uint64_t bleSleepTicks, idleTicks, dsSysTickPeriods;
     bool_t schTimerActive;
 
     /* We do not currently handle to case where the WUT is slower than the RTOS tick */
@@ -316,15 +316,7 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
             MXC_WUT_RestoreBBClock(BB_CLK_RATE_HZ);
 
             /* Restart the BLE scheduler timer */
-            dsWutTicks = MXC_WUT->cnt - preCapture;
-            schUsecElapsed =
-                (uint64_t)dsWutTicks * (uint64_t)1000000 / (uint64_t)configRTC_TICK_RATE_HZ;
-
-            int palTimerStartTicks = schUsec - schUsecElapsed - SCH_HANDLER_LATENCY_US;
-            if (palTimerStartTicks < 1) {
-                palTimerStartTicks = 1;
-            }
-            PalTimerStart(palTimerStartTicks);
+            PalTimerStart(1);
         }
     }
 
