@@ -180,7 +180,7 @@ static void deepSleep(void)
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
 {
     uint32_t preCapture, postCapture, schUsec, dsTicks, dsWutTicks;
-    uint64_t bleSleepTicks, idleTicks, dsSysTickPeriods;
+    uint64_t bleSleepTicks, idleTicks, dsSysTickPeriods, schUsecElapsed;
     bool_t schTimerActive;
 
     /* We do not currently handle to case where the WUT is slower than the RTOS tick */
@@ -316,7 +316,15 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
             MXC_WUT_RestoreBBClock(BB_CLK_RATE_HZ);
 
             /* Restart the BLE scheduler timer */
-            PalTimerStart(1);
+            dsWutTicks = MXC_WUT->cnt - preCapture;
+            schUsecElapsed =
+                (uint64_t)dsWutTicks * (uint64_t)1000000 / (uint64_t)configRTC_TICK_RATE_HZ;
+
+            int palTimerStartTicks = schUsec - schUsecElapsed;
+            if (palTimerStartTicks < 1) {
+                palTimerStartTicks = 1;
+            }
+            PalTimerStart(palTimerStartTicks);
         }
     }
 
